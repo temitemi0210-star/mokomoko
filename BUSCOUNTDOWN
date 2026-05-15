@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>らくらくバス予報 Pro</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --main-blue: #005bac;
+            --accent-orange: #ff8c00;
+            --danger-red: #e63946;
+            --text-black: #333;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-black);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 設定画面 */
+        #setup-screen {
+            display: none;
+            width: 90%;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        /* メイン画面 */
+        #main-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .route-info { text-align: center; width: 90%; margin-bottom: 20px; }
+        .station-name { font-size: 1.8rem; font-weight: bold; color: var(--main-blue); }
+        .arrow { font-size: 1.5rem; color: #666; margin: 5px 0; }
+
+        .timer-container {
+            background: white;
+            width: 85%;
+            padding: 40px 10px;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            text-align: center;
+            border: 5px solid var(--main-blue);
+            position: relative;
+        }
+
+        .time-left {
+            font-size: 6rem;
+            font-weight: 900;
+            color: var(--accent-orange);
+            line-height: 1;
+        }
+
+        .unit { font-size: 2rem; margin-left: 5px; }
+
+        .controls { margin-top: 30px; width: 90%; display: flex; flex-direction: column; gap: 10px; }
+        
+        button {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .swap-btn { background-color: var(--main-blue); color: white; }
+        .settings-btn { background-color: #ddd; color: #555; font-size: 0.9rem; padding: 10px; }
+        
+        .imminent { color: var(--danger-red) !important; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <!-- 設定画面 -->
+    <div id="setup-screen">
+        <h2>初期設定</h2>
+        <p>バス停名と時刻表を入力してください。</p>
+        <label>バス停A（起点）</label>
+        <input type="text" id="input-a" placeholder="例：那覇インター">
+        <label>バス停B（終点）</label>
+        <input type="text" id="input-b" placeholder="例：沖縄南インター">
+        
+        <label>A → B の時刻表（半角 08:00, 08:30...）</label>
+        <textarea id="time-a-b" rows="4" placeholder="08:00, 08:30, 09:15"></textarea>
+
+        <label>B → A の時刻表</label>
+        <textarea id="time-b-a" rows="4" placeholder="07:45, 08:20, 09:00"></textarea>
+
+        <button class="swap-btn" onclick="saveSettings()">設定を保存して開始</button>
+    </div>
+
+    <!-- メイン表示画面 -->
+    <div id="main-screen">
+        <div class="route-info">
+            <div id="display-origin" class="station-name">--</div>
+            <div class="arrow">▼</div>
+            <div id="display-destination" class="station-name">--</div>
+        </div>
+
+        <div class="timer-container">
+            <div id="countdown" class="time-left">--</div>
+            <div id="bus-arrival" style="font-weight:bold; margin-top:10px;">出発時刻: --:--</div>
+        </div>
+
+        <div class="controls">
+            <button class="swap-btn" onclick="swapRoute()">行き先を入れ替える</button>
+            <button class="settings-btn" onclick="showSetup()">設定を変更する</button>
+        </div>
+    </div>
+
+    <script>
+        let config = {
+            stationA: "",
+            stationB: "",
+            timesAB: [],
+            timesBA: []
+        };
+        let currentMode = "AB";
+
+        // 初期読み込み
+        window.onload = () => {
+            const saved = localStorage.getItem("busConfig");
+            if (saved) {
+                config = JSON.parse(saved);
+                startApp();
+            } else {
+                showSetup();
+            }
+        };
+
+        function showSetup() {
+            document.getElementById("main-screen").style.display = "none";
+            document.getElementById("setup-screen").style.display = "block";
+            document.getElementById("input-a").value = config.stationA;
+            document.getElementById("input-b").value = config.stationB;
+            document.getElementById("time-a-b").value = config.timesAB.join(", ");
+            document.getElementById("time-b-a").value = config.timesBA.join(", ");
+        }
+
+        function saveSettings() {
+            config.stationA = document.getElementById("input-a").value;
+            config.stationB = document.getElementById("input-b").value;
+            config.timesAB = document.getElementById("time-a-b").value.split(/[,、\s\n]+/).filter(t => t.includes(":"));
+            config.timesBA = document.getElementById("time-b-a").value.split(/[,、\s\n]+/).filter(t => t.includes(":"));
+            
+            localStorage.setItem("busConfig", JSON.stringify(config));
+            startApp();
+        }
+
+        function startApp() {
+            document.getElementById("setup-screen").style.display = "none";
+            document.getElementById("main-screen").style.display = "flex";
+            updateDisplayNames();
+            updateTimer();
+        }
+
+        function updateDisplayNames() {
+            const origin = document.getElementById("display-origin");
+            const dest = document.getElementById("display-destination");
+            if (currentMode === "AB") {
+                origin.innerText = config.stationA;
+                dest.innerText = config.stationB;
+            } else {
+                origin.innerText = config.stationB;
+                dest.innerText = config.stationA;
+            }
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const currentTimes = (currentMode === "AB") ? config.timesAB : config.timesBA;
+            
+            let nextBusStr = null;
+            let minDiff = Infinity;
+
+            for (let timeStr of currentTimes) {
+                const [h, m] = timeStr.split(":").map(Number);
+                const busDate = new Date();
+                busDate.setHours(h, m, 0, 0);
+
+                // 深夜対応：もし現在の時間がバスの時間を過ぎていたら翌日として扱う
+                if (busDate < now) {
+                    busDate.setDate(busDate.getDate() + 1);
+                }
+
+                const diff = busDate - now;
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    nextBusStr = timeStr;
+                }
+            }
+
+            const countdownElement = document.getElementById("countdown");
+            const arrivalElement = document.getElementById("bus-arrival");
+
+            if (nextBusStr) {
+                const diffMin = Math.floor(minDiff / 1000 / 60);
+                const diffSec = Math.floor((minDiff / 1000) % 60);
+
+                if (diffMin === 0) {
+                    countdownElement.innerHTML = `<span class="imminent">まもなく</span>`;
+                } else if (diffMin >= 60) {
+                    const h = Math.floor(diffMin / 60);
+                    const m = diffMin % 60;
+                    countdownElement.innerHTML = `${h}<span class="unit">時</span>${m}<span class="unit">分</span>`;
+                } else {
+                    countdownElement.innerHTML = `${diffMin}<span class="unit">分</span>`;
+                }
+                
+                countdownElement.classList.toggle("imminent", diffMin === 0);
+                arrivalElement.innerText = `出発予定時刻: ${nextBusStr}`;
+            } else {
+                countdownElement.innerText = "終了";
+                arrivalElement.innerText = "時刻表を登録してください";
+            }
+        }
+
+        function swapRoute() {
+            currentMode = (currentMode === "AB") ? "BA" : "AB";
+            updateDisplayNames();
+            updateTimer();
+        }
+
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>
