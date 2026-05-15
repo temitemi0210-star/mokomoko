@@ -2,213 +2,205 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#0d0820">
-<title>もこもこ☆シューター - Vivid Edition</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@500;700;900&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>もこもこ☆リンク</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-  }
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  body {
+    width: 100vw; height: 100vh; overflow: hidden;
     background: #050310;
     font-family: 'M PLUS Rounded 1c', sans-serif;
-    touch-action: none;
+    display: flex; justify-content: center; align-items: center;
   }
-
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle at 20% 10%, rgba(255,0,128,0.1), transparent 40%), #050310;
-  }
-
   #gameContainer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    max-width: 480px;
-    aspect-ratio: 9 / 16;
-    background: radial-gradient(ellipse at 50% 0%, #2a1450 0%, #050310 100%);
+    position: relative; width: 100%; height: 100%;
+    max-width: 480px; aspect-ratio: 9/16;
+    background: radial-gradient(circle at 50% 50%, #1a0e35 0%, #050310 100%);
     overflow: hidden;
-    box-shadow: 0 0 50px rgba(0,0,0,0.5);
   }
-
-  canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    display: block;
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #uiLayer {
+    position: absolute; top: 20px; width: 100%;
+    display: flex; justify-content: space-around;
+    pointer-events: none; z-index: 100;
   }
-
-  #sparkleCanvas { z-index: 10; pointer-events: none; }
-  #gameCanvas { z-index: 5; }
-
-  #guideMessage {
-    position: absolute;
-    top: 65%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #FFD700;
-    font-family: 'DotGothic16', sans-serif;
-    font-size: 22px;
-    z-index: 20;
-    pointer-events: none;
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
-    transition: opacity 0.8s ease;
-  }
-
   .hud {
-    position: absolute;
-    top: 20px;
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    z-index: 30;
-    pointer-events: none;
+    background: rgba(0,0,0,0.6); padding: 8px 20px;
+    border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+    color: #fff; font-weight: 900;
   }
-
-  .hud-item {
-    background: rgba(0,0,0,0.6);
-    padding: 5px 15px;
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.2);
-    color: #fff;
-    font-weight: 900;
+  #guide {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: #FFD700; font-family: 'DotGothic16'; font-size: 24px;
+    text-shadow: 0 0 10px rgba(255,215,0,0.8); pointer-events: none;
+    transition: opacity 0.5s; z-index: 50;
   }
 </style>
 </head>
 <body>
 
 <div id="gameContainer">
-  <canvas id="gameCanvas"></canvas>
-  <canvas id="sparkleCanvas"></canvas>
-  <div id="guideMessage">画面をなぞってね</div>
-  
-  <div class="hud">
-    <div class="hud-item">SCORE: <span id="score">0</span></div>
-    <div class="hud-item">CHAIN: <span id="chain">1</span></div>
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="effectCanvas"></canvas>
+  <div id="uiLayer">
+    <div class="hud">SCORE: <span id="score">0</span></div>
   </div>
+  <div id="guide">同じ色をなぞってつなげてね</div>
 </div>
 
 <script>
 'use strict';
 
-// --- 設定 ---
-// キャラクターの色を「濃く・鮮やか」に再定義
 const COLORS = [
-  { fill: '#FF006E', glow: 'rgba(255, 0, 110, 0.8)' }, // ビビッドマゼンタ
-  { fill: '#3A86FF', glow: 'rgba(58, 134, 255, 0.8)' }, // ロイヤルブルー
-  { fill: '#FFBE0B', glow: 'rgba(255, 190, 11, 0.8)' }, // アンバーイエロー
-  { fill: '#8338EC', glow: 'rgba(131, 56, 236, 0.8)' }, // バイオレットパープル
-  { fill: '#06D6A0', glow: 'rgba(6, 214, 160, 0.8)' }   // エメラルドグリーン
+  { fill: '#FF006E', glow: 'rgba(255, 0, 110, 0.8)' },
+  { fill: '#3A86FF', glow: 'rgba(58, 134, 255, 0.8)' },
+  { fill: '#FFBE0B', glow: 'rgba(255, 190, 11, 0.8)' },
+  { fill: '#8338EC', glow: 'rgba(131, 56, 236, 0.8)' },
+  { fill: '#06D6A0', glow: 'rgba(6, 214, 160, 0.8)' }
 ];
 
-const gCanvas = document.getElementById('gameCanvas');
-const sCanvas = document.getElementById('sparkleCanvas');
-const gCtx = gCanvas.getContext('2d');
-const sCtx = sCanvas.getContext('2d');
-const guide = document.getElementById('guideMessage');
+const bgCanvas = document.getElementById('bgCanvas');
+const efCanvas = document.getElementById('effectCanvas');
+const bctx = bgCanvas.getContext('2d');
+const ectx = efCanvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const guide = document.getElementById('guide');
 
-let width, height;
+let width, height, dots = [], selectedDots = [], sparkles = [], score = 0;
+const DOT_RADIUS = 28;
+const GRID_SIZE = 70;
+
 function resize() {
-  const rect = gCanvas.parentElement.getBoundingClientRect();
-  width = gCanvas.width = sCanvas.width = rect.width;
-  height = gCanvas.height = sCanvas.height = rect.height;
+  const rect = bgCanvas.parentElement.getBoundingClientRect();
+  width = bgCanvas.width = efCanvas.width = rect.width;
+  height = bgCanvas.height = efCanvas.height = rect.height;
+  initGrid();
 }
-window.addEventListener('resize', resize);
-resize();
 
-// --- 線香花火ロジック ---
-let sparkles = [];
+class Dot {
+  constructor(col, row) {
+    this.col = col;
+    this.row = row;
+    this.colorIdx = Math.floor(Math.random() * COLORS.length);
+    this.resetPos();
+    this.scale = 1;
+  }
+  resetPos() {
+    this.x = width / 2 + (this.col - 2) * GRID_SIZE;
+    this.y = height / 2 + (this.row - 3) * GRID_SIZE;
+  }
+}
+
 class Sparkle {
-  constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.vx = (Math.random() - 0.5) * 5;
-    this.vy = (Math.random() - 0.5) * 5 - 1;
+  constructor(x, y, color) {
+    this.x = x; this.y = y;
+    this.vx = (Math.random() - 0.5) * 8;
+    this.vy = (Math.random() - 0.5) * 8;
     this.life = 1.0;
-    this.decay = 0.02 + Math.random() * 0.02;
-    this.color = `hsl(${Math.random() * 15 + 40}, 100%, 70%)`; // 金色の火花
+    this.color = color;
   }
   update() {
-    this.vy += 0.12; // 重力
-    this.x += this.vx;
-    this.y += this.vy;
-    this.life -= this.decay;
-  }
-  draw() {
-    sCtx.globalAlpha = this.life;
-    sCtx.fillStyle = this.color;
-    sCtx.beginPath();
-    sCtx.arc(this.x, this.y, Math.random() * 2.5, 0, Math.PI * 2);
-    sCtx.fill();
+    this.vy += 0.2; this.x += this.vx; this.y += this.vy; this.life -= 0.03;
   }
 }
 
-// --- インタラクション ---
-function handleInteraction(ex, ey) {
-  if(guide.style.opacity !== '0') guide.style.opacity = '0';
-  const rect = sCanvas.getBoundingClientRect();
-  const x = ex - rect.left;
-  const y = ey - rect.top;
-  for(let i=0; i<3; i++) sparkles.push(new Sparkle(x, y));
+function initGrid() {
+  dots = [];
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 5; c++) {
+      dots.push(new Dot(c, r));
+    }
+  }
 }
 
-window.addEventListener('mousemove', e => handleInteraction(e.clientX, e.clientY));
-window.addEventListener('touchmove', e => handleInteraction(e.touches[0].clientX, e.touches[0].clientY));
+function getDotAt(x, y) {
+  return dots.find(d => Math.hypot(d.x - x, d.y - y) < DOT_RADIUS);
+}
 
-// --- 描画ループ ---
-function animate() {
-  // 線香花火レイヤー
-  sCtx.clearRect(0, 0, width, height);
-  for(let i = sparkles.length-1; i>=0; i--) {
-    sparkles[i].update();
-    sparkles[i].draw();
-    if(sparkles[i].life <= 0) sparkles.splice(i, 1);
+function handleInput(ex, ey, isEnd = false) {
+  if (guide.style.opacity !== '0') guide.style.opacity = '0';
+  const rect = efCanvas.getBoundingClientRect();
+  const x = ex - rect.left, y = ey - rect.top;
+
+  if (isEnd) {
+    if (selectedDots.length >= 3) {
+      score += selectedDots.length * 10;
+      scoreEl.innerText = score;
+      selectedDots.forEach(d => {
+        for(let i=0; i<15; i++) sparkles.push(new Sparkle(d.x, d.y, COLORS[d.colorIdx].fill));
+        d.colorIdx = Math.floor(Math.random() * COLORS.length);
+      });
+    }
+    selectedDots = [];
+    return;
   }
 
-  // ゲームレイヤー（キャラクター描画デモ）
-  gCtx.fillStyle = '#050310';
-  gCtx.fillRect(0, 0, width, height);
+  const dot = getDotAt(x, y);
+  if (dot) {
+    if (selectedDots.length === 0) {
+      selectedDots.push(dot);
+    } else {
+      const last = selectedDots[selectedDots.length - 1];
+      if (dot.colorIdx === last.colorIdx && !selectedDots.includes(dot)) {
+        const dist = Math.hypot(dot.col - last.col, dot.row - last.row);
+        if (dist <= 1.5) selectedDots.push(dot);
+      }
+    }
+  }
+  // マウス位置に火花
+  for(let i=0; i<2; i++) sparkles.push(new Sparkle(x, y, '#FFE082'));
+}
 
-  // 濃くなった色のキャラクターを並べて表示（プレビュー用）
-  const radius = 25;
-  COLORS.forEach((color, i) => {
-    const x = (width / (COLORS.length + 1)) * (i + 1);
-    const y = height / 3;
-    
-    // キャラクターの体
-    gCtx.shadowBlur = 20;
-    gCtx.shadowColor = color.glow;
-    gCtx.fillStyle = color.fill;
-    gCtx.beginPath();
-    gCtx.arc(x, y + Math.sin(Date.now()/200 + i)*5, radius, 0, Math.PI*2);
-    gCtx.fill();
-    
-    // ハイライト（もこもこ感）
-    gCtx.shadowBlur = 0;
-    gCtx.fillStyle = 'rgba(255,255,255,0.3)';
-    gCtx.beginPath();
-    gCtx.arc(x - 8, y - 8 + Math.sin(Date.now()/200 + i)*5, 6, 0, Math.PI*2);
-    gCtx.fill();
+efCanvas.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY));
+efCanvas.addEventListener('mousemove', e => { if(e.buttons) handleInput(e.clientX, e.clientY) });
+window.addEventListener('mouseup', e => handleInput(e.clientX, e.clientY, true));
+efCanvas.addEventListener('touchstart', e => handleInput(e.touches[0].clientX, e.touches[0].clientY));
+efCanvas.addEventListener('touchmove', e => handleInput(e.touches[0].clientX, e.touches[0].clientY));
+efCanvas.addEventListener('touchend', e => handleInput(0, 0, true));
+
+function draw() {
+  bctx.fillStyle = '#050310';
+  bctx.fillRect(0, 0, width, height);
+  ectx.clearRect(0, 0, width, height);
+
+  // つないでいる線
+  if (selectedDots.length > 0) {
+    ectx.beginPath();
+    ectx.strokeStyle = COLORS[selectedDots[0].colorIdx].fill;
+    ectx.lineWidth = 5;
+    selectedDots.forEach((d, i) => {
+      if (i === 0) ectx.moveTo(d.x, d.y); else ectx.lineTo(d.x, d.y);
+    });
+    ectx.stroke();
+  }
+
+  dots.forEach(d => {
+    const c = COLORS[d.colorIdx];
+    bctx.shadowBlur = selectedDots.includes(d) ? 25 : 10;
+    bctx.shadowColor = c.glow;
+    bctx.fillStyle = c.fill;
+    bctx.beginPath();
+    bctx.arc(d.x, d.y, DOT_RADIUS * (selectedDots.includes(d) ? 1.2 : 1), 0, Math.PI * 2);
+    bctx.fill();
+    bctx.shadowBlur = 0;
   });
 
-  requestAnimationFrame(animate);
+  for (let i = sparkles.length - 1; i >= 0; i--) {
+    const s = sparkles[i];
+    s.update();
+    ectx.globalAlpha = s.life;
+    ectx.fillStyle = s.color;
+    ectx.beginPath(); ectx.arc(s.x, s.y, 2, 0, Math.PI * 2); ectx.fill();
+    if (s.life <= 0) sparkles.splice(i, 1);
+  }
+  requestAnimationFrame(draw);
 }
 
-animate();
+window.addEventListener('resize', resize);
+resize();
+draw();
+
 </script>
 </body>
 </html>
