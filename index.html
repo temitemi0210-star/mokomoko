@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>もこもこ☆リンク</title>
-<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@700;900&display=swap" rel="stylesheet">
+<title>もこもこ☆リンク Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=M+PLUS+Rounded+1c:wght@900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
   body {
@@ -21,20 +21,21 @@
   }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   #uiLayer {
-    position: absolute; top: 20px; width: 100%;
+    position: absolute; top: 30px; width: 100%;
     display: flex; justify-content: space-around;
     pointer-events: none; z-index: 100;
   }
   .hud {
-    background: rgba(0,0,0,0.6); padding: 8px 20px;
-    border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
-    color: #fff; font-weight: 900;
+    background: rgba(0,0,0,0.7); padding: 10px 25px;
+    border-radius: 30px; border: 2px solid rgba(255,255,255,0.1);
+    color: #fff; font-size: 1.2rem; font-weight: 900;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
   }
   #guide {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     color: #FFD700; font-family: 'DotGothic16'; font-size: 24px;
-    text-shadow: 0 0 10px rgba(255,215,0,0.8); pointer-events: none;
-    transition: opacity 0.5s; z-index: 50;
+    text-shadow: 0 0 15px rgba(255,215,0,0.9); pointer-events: none;
+    transition: opacity 0.5s; z-index: 50; text-align: center; line-height: 1.6;
   }
 </style>
 </head>
@@ -46,18 +47,19 @@
   <div id="uiLayer">
     <div class="hud">SCORE: <span id="score">0</span></div>
   </div>
-  <div id="guide">同じ色をなぞってつなげてね</div>
+  <div id="guide">同じ色を3つ以上<br>なぞってつなげてね！</div>
 </div>
 
 <script>
 'use strict';
 
+// キャラクターの色：さらに濃く、鮮やかに設定
 const COLORS = [
-  { fill: '#FF006E', glow: 'rgba(255, 0, 110, 0.8)' },
-  { fill: '#3A86FF', glow: 'rgba(58, 134, 255, 0.8)' },
-  { fill: '#FFBE0B', glow: 'rgba(255, 190, 11, 0.8)' },
-  { fill: '#8338EC', glow: 'rgba(131, 56, 236, 0.8)' },
-  { fill: '#06D6A0', glow: 'rgba(6, 214, 160, 0.8)' }
+  { fill: '#E6005C', glow: 'rgba(230, 0, 92, 0.9)', highlight: '#FF66A3' }, // 濃いピンク
+  { fill: '#0055FF', glow: 'rgba(0, 85, 255, 0.9)', highlight: '#6699FF' }, // 濃い青
+  { fill: '#FF9900', glow: 'rgba(255, 153, 0, 0.9)', highlight: '#FFCC66' }, // 濃いオレンジ
+  { fill: '#6600CC', glow: 'rgba(102, 0, 204, 0.9)', highlight: '#B266FF' }, // 濃い紫
+  { fill: '#009944', glow: 'rgba(0, 153, 68, 0.9)', highlight: '#66CC99' }   // 濃い緑
 ];
 
 const bgCanvas = document.getElementById('bgCanvas');
@@ -68,13 +70,16 @@ const scoreEl = document.getElementById('score');
 const guide = document.getElementById('guide');
 
 let width, height, dots = [], selectedDots = [], sparkles = [], score = 0;
-const DOT_RADIUS = 28;
-const GRID_SIZE = 70;
+const DOT_RADIUS = 30;
+const GRID_COLS = 5;
+const GRID_ROWS = 7;
+let cellSize = 0;
 
 function resize() {
   const rect = bgCanvas.parentElement.getBoundingClientRect();
   width = bgCanvas.width = efCanvas.width = rect.width;
   height = bgCanvas.height = efCanvas.height = rect.height;
+  cellSize = Math.min(width / (GRID_COLS + 1), height / (GRID_ROWS + 2));
   initGrid();
 }
 
@@ -83,52 +88,66 @@ class Dot {
     this.col = col;
     this.row = row;
     this.colorIdx = Math.floor(Math.random() * COLORS.length);
-    this.resetPos();
-    this.scale = 1;
+    this.updatePos();
   }
-  resetPos() {
-    this.x = width / 2 + (this.col - 2) * GRID_SIZE;
-    this.y = height / 2 + (this.row - 3) * GRID_SIZE;
+  updatePos() {
+    this.x = width / 2 + (this.col - (GRID_COLS-1)/2) * cellSize;
+    this.y = height / 2 + (this.row - (GRID_ROWS-1)/2) * cellSize + 20;
   }
 }
 
 class Sparkle {
   constructor(x, y, color) {
     this.x = x; this.y = y;
-    this.vx = (Math.random() - 0.5) * 8;
-    this.vy = (Math.random() - 0.5) * 8;
+    this.vx = (Math.random() - 0.5) * 10;
+    this.vy = (Math.random() - 0.5) * 10 - 2;
     this.life = 1.0;
     this.color = color;
   }
   update() {
-    this.vy += 0.2; this.x += this.vx; this.y += this.vy; this.life -= 0.03;
+    this.vy += 0.25; // 重力
+    this.vx *= 0.98;
+    this.x += this.vx; this.y += this.vy;
+    this.life -= 0.02;
   }
 }
 
+// 初期配置：ランダムすぎないように少し調整
 function initGrid() {
   dots = [];
-  for (let r = 0; r < 7; r++) {
-    for (let c = 0; c < 5; c++) {
+  for (let r = 0; r < GRID_ROWS; r++) {
+    for (let c = 0; c < GRID_COLS; c++) {
       dots.push(new Dot(c, r));
     }
+  }
+  // 同じ色が全くない事故を防ぐため、ランダムにいくつかの塊を作る
+  for (let i = 0; i < 5; i++) {
+    const idx = Math.floor(Math.random() * dots.length);
+    const targetColor = dots[idx].colorIdx;
+    // 隣接するドットを同じ色にする
+    dots.forEach(d => {
+      if (Math.abs(d.col - dots[idx].col) <= 1 && Math.abs(d.row - dots[idx].row) <= 1) {
+        if (Math.random() > 0.3) d.colorIdx = targetColor;
+      }
+    });
   }
 }
 
 function getDotAt(x, y) {
-  return dots.find(d => Math.hypot(d.x - x, d.y - y) < DOT_RADIUS);
+  return dots.find(d => Math.hypot(d.x - x, d.y - y) < DOT_RADIUS * 1.2);
 }
 
 function handleInput(ex, ey, isEnd = false) {
-  if (guide.style.opacity !== '0') guide.style.opacity = '0';
   const rect = efCanvas.getBoundingClientRect();
   const x = ex - rect.left, y = ey - rect.top;
 
   if (isEnd) {
     if (selectedDots.length >= 3) {
-      score += selectedDots.length * 10;
+      score += selectedDots.length * 10 * (selectedDots.length - 2);
       scoreEl.innerText = score;
       selectedDots.forEach(d => {
-        for(let i=0; i<15; i++) sparkles.push(new Sparkle(d.x, d.y, COLORS[d.colorIdx].fill));
+        // 線香花火風エフェクト
+        for(let i=0; i<20; i++) sparkles.push(new Sparkle(d.x, d.y, COLORS[d.colorIdx].fill));
         d.colorIdx = Math.floor(Math.random() * COLORS.length);
       });
     }
@@ -138,25 +157,34 @@ function handleInput(ex, ey, isEnd = false) {
 
   const dot = getDotAt(x, y);
   if (dot) {
+    if (guide.style.opacity !== '0') guide.style.opacity = '0';
     if (selectedDots.length === 0) {
       selectedDots.push(dot);
     } else {
       const last = selectedDots[selectedDots.length - 1];
+      // 同じ色かつ隣接しているかチェック
       if (dot.colorIdx === last.colorIdx && !selectedDots.includes(dot)) {
-        const dist = Math.hypot(dot.col - last.col, dot.row - last.row);
-        if (dist <= 1.5) selectedDots.push(dot);
+        const dist = Math.max(Math.abs(dot.col - last.col), Math.abs(dot.row - last.row));
+        if (dist === 1) selectedDots.push(dot);
+      } else if (selectedDots.length >= 2 && dot === selectedDots[selectedDots.length - 2]) {
+        // 一つ戻る操作
+        selectedDots.pop();
       }
     }
   }
-  // マウス位置に火花
-  for(let i=0; i<2; i++) sparkles.push(new Sparkle(x, y, '#FFE082'));
+  
+  // なぞっている間の火花
+  if (ex !== 0) {
+    for(let i=0; i<2; i++) sparkles.push(new Sparkle(x, y, '#FFFACD'));
+  }
 }
 
+// イベントリスナー
 efCanvas.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY));
 efCanvas.addEventListener('mousemove', e => { if(e.buttons) handleInput(e.clientX, e.clientY) });
 window.addEventListener('mouseup', e => handleInput(e.clientX, e.clientY, true));
-efCanvas.addEventListener('touchstart', e => handleInput(e.touches[0].clientX, e.touches[0].clientY));
-efCanvas.addEventListener('touchmove', e => handleInput(e.touches[0].clientX, e.touches[0].clientY));
+efCanvas.addEventListener('touchstart', e => { e.preventDefault(); handleInput(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+efCanvas.addEventListener('touchmove', e => { e.preventDefault(); handleInput(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
 efCanvas.addEventListener('touchend', e => handleInput(0, 0, true));
 
 function draw() {
@@ -168,32 +196,59 @@ function draw() {
   if (selectedDots.length > 0) {
     ectx.beginPath();
     ectx.strokeStyle = COLORS[selectedDots[0].colorIdx].fill;
-    ectx.lineWidth = 5;
+    ectx.lineWidth = 8;
+    ectx.lineCap = 'round';
+    ectx.lineJoin = 'round';
+    ectx.shadowBlur = 15;
+    ectx.shadowColor = COLORS[selectedDots[0].colorIdx].glow;
     selectedDots.forEach((d, i) => {
       if (i === 0) ectx.moveTo(d.x, d.y); else ectx.lineTo(d.x, d.y);
     });
     ectx.stroke();
+    ectx.shadowBlur = 0;
   }
 
+  // ドットの描画
   dots.forEach(d => {
     const c = COLORS[d.colorIdx];
-    bctx.shadowBlur = selectedDots.includes(d) ? 25 : 10;
+    const isSel = selectedDots.includes(d);
+    const s = isSel ? 1.2 : 1.0;
+
+    bctx.save();
+    bctx.translate(d.x, d.y);
+    
+    // 外側の光
+    bctx.shadowBlur = isSel ? 30 : 15;
     bctx.shadowColor = c.glow;
+    
+    // 本体
     bctx.fillStyle = c.fill;
     bctx.beginPath();
-    bctx.arc(d.x, d.y, DOT_RADIUS * (selectedDots.includes(d) ? 1.2 : 1), 0, Math.PI * 2);
+    bctx.arc(0, 0, DOT_RADIUS * s, 0, Math.PI * 2);
     bctx.fill();
+    
+    // ハイライト（もこもこ光沢感）
     bctx.shadowBlur = 0;
+    bctx.fillStyle = c.highlight;
+    bctx.beginPath();
+    bctx.arc(-DOT_RADIUS*0.3*s, -DOT_RADIUS*0.3*s, DOT_RADIUS*0.2*s, 0, Math.PI * 2);
+    bctx.fill();
+    
+    bctx.restore();
   });
 
+  // 火花エフェクト
   for (let i = sparkles.length - 1; i >= 0; i--) {
     const s = sparkles[i];
     s.update();
     ectx.globalAlpha = s.life;
     ectx.fillStyle = s.color;
-    ectx.beginPath(); ectx.arc(s.x, s.y, 2, 0, Math.PI * 2); ectx.fill();
+    ectx.shadowBlur = 5;
+    ectx.shadowColor = s.color;
+    ectx.beginPath(); ectx.arc(s.x, s.y, 2.5, 0, Math.PI * 2); ectx.fill();
     if (s.life <= 0) sparkles.splice(i, 1);
   }
+  
   requestAnimationFrame(draw);
 }
 
