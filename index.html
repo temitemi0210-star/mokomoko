@@ -1,247 +1,167 @@
-export default function StudySupportApp() {
-  const { useState, useMemo } = React;
-
-  const [tasks, setTasks] = useState([]);
-  const [title, setTitle] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [priority, setPriority] = useState("中");
-
-  const taskTemplates = {
-    レポート: ["テーマ決定", "資料収集", "構成作成", "本文執筆", "推敲"],
-    プレゼン: ["テーマ決定", "資料収集", "スライド作成", "発表練習"],
-    テスト: ["範囲確認", "ノート整理", "問題演習", "復習"]
-  };
-
-  const generateSubtasks = (taskTitle) => {
-    for (const key in taskTemplates) {
-      if (taskTitle.includes(key)) {
-        return taskTemplates[key].map((sub, index) => ({
-          id: Date.now() + index,
-          title: sub,
-          completed: false
-        }));
-      }
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大学生向け学習支援アプリ</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #fff7fb;
+      color: #555;
     }
 
-    return [
-      {
-        id: Date.now(),
-        title: "タスクを細分化する",
-        completed: false
-      }
-    ];
-  };
+    header {
+      background: #ffd6e7;
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #7a4e65;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
 
-  const addTask = () => {
-    if (!title || !deadline) return;
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
 
-    const newTask = {
-      id: Date.now(),
-      title,
-      deadline,
-      priority,
-      completed: false,
-      subtasks: generateSubtasks(title)
-    };
+    .card {
+      background: #ffffff;
+      border-radius: 25px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
 
-    setTasks([...tasks, newTask]);
-    setTitle("");
-    setDeadline("");
-    setPriority("中");
-  };
+    h2 {
+      color: #c76b98;
+    }
 
-  const toggleTask = (id) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id
-          ? { ...task, completed: !task.completed }
-          : task
-      )
-    );
-  };
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border-radius: 15px;
+      border: 2px solid #ffd6e7;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
 
-  const toggleSubtask = (taskId, subtaskId) => {
-    setTasks(
-      tasks.map((task) => {
-        if (task.id !== taskId) return task;
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 15px;
+      background: #ff9ec7;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
 
-        return {
-          ...task,
-          subtasks: task.subtasks.map((sub) =>
-            sub.id === subtaskId
-              ? { ...sub, completed: !sub.completed }
-              : sub
-          )
-        };
-      })
-    );
-  };
+    button:hover {
+      opacity: 0.85;
+    }
 
-  const progress = useMemo(() => {
-    if (tasks.length === 0) return 0;
+    .task {
+      background: #fff0f6;
+      border-radius: 20px;
+      padding: 15px;
+      margin-top: 15px;
+    }
 
-    const completed = tasks.filter((task) => task.completed).length;
-    return Math.round((completed / tasks.length) * 100);
-  }, [tasks]);
+    .high {
+      border-left: 8px solid #ff6b81;
+    }
 
-  const encouragement = () => {
-    if (progress === 100) return "全部完了！お疲れさま！";
-    if (progress >= 70) return "かなり順調です！";
-    if (progress >= 40) return "いい感じです！";
-    if (progress > 0) return "少しずつ進めています！";
-    return "まずは1つ終わらせてみよう！";
-  };
+    .medium {
+      border-left: 8px solid #ffd166;
+    }
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 text-center">
-          大学生向け学習支援アプリ
-        </h1>
+    .low {
+      border-left: 8px solid #7bd389;
+    }
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-semibold mb-4">課題追加</h2>
+    .complete-btn {
+      background: #8fd3ff;
+    }
 
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="課題名を入力"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full border rounded-xl p-3"
-              />
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+      color: #d45d8f;
+    }
 
-              <input
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                className="w-full border rounded-xl p-3"
-              />
+    ul {
+      padding-left: 20px;
+    }
 
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="w-full border rounded-xl p-3"
-              >
-                <option>高</option>
-                <option>中</option>
-                <option>低</option>
-              </select>
+    .cute {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
 
-              <button
-                onClick={addTask}
-                className="w-full bg-black text-white rounded-xl p-3 hover:opacity-80"
-              >
-                課題を追加
-              </button>
-            </div>
-          </div>
+<header>
+  🎀 大学生向け学習サポートアプリ 🎀
+</header>
 
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-semibold mb-4">進捗状況</h2>
+<div class="container">
 
-            <div className="mb-4">
-              <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
-                <div
-                  className="bg-green-500 h-6 transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
+  <div class="card">
+    <h2>課題追加</h2>
 
-            <p className="text-lg font-medium">進捗率：{progress}%</p>
-            <p className="mt-2 text-gray-700">{encouragement()}</p>
-          </div>
-        </div>
+    <input type="text" id="taskName" placeholder="課題名を入力">
 
-        <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-6">課題一覧</h2>
+    <select id="importance">
+      <option value="high">重要度：高</option>
+      <option value="medium">重要度：中</option>
+      <option value="low">重要度：低</option>
+    </select>
 
-          {tasks.length === 0 ? (
-            <p className="text-gray-500">まだ課題がありません。</p>
-          ) : (
-            <div className="space-y-6">
-              {tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="border rounded-2xl p-5 bg-gray-50"
-                >
-                  <div className="flex justify-between items-center flex-wrap gap-3">
-                    <div>
-                      <h3 className="text-xl font-bold">{task.title}</h3>
-                      <p className="text-sm text-gray-600">
-                        締切：{task.deadline}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        優先度：{task.priority}
-                      </p>
-                    </div>
+    <input type="date" id="deadline">
 
-                    <button
-                      onClick={() => toggleTask(task.id)}
-                      className={`px-4 py-2 rounded-xl text-white ${
-                        task.completed
-                          ? "bg-green-600"
-                          : "bg-gray-700"
-                      }`}
-                    >
-                      {task.completed ? "完了済み" : "未完了"}
-                    </button>
-                  </div>
+    <select id="weight">
+      <option>課題の重さ：重い</option>
+      <option>課題の重さ：普通</option>
+      <option>課題の重さ：軽い</option>
+    </select>
 
-                  <div className="mt-4">
-                    <h4 className="font-semibold mb-2">タスク分割</h4>
+    <select id="mood">
+      <option>今日の気分：元気</option>
+      <option>今日の気分：眠い</option>
+      <option>今日の気分：やる気が出ない</option>
+      <option>今日の気分：集中できる</option>
+    </select>
 
-                    <div className="space-y-2">
-                      {task.subtasks.map((sub) => (
-                        <label
-                          key={sub.id}
-                          className="flex items-center gap-3 bg-white rounded-xl p-3"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={sub.completed}
-                            onChange={() =>
-                              toggleSubtask(task.id, sub.id)
-                            }
-                          />
-                          <span
-                            className={sub.completed ? "line-through" : ""}
-                          >
-                            {sub.title}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+    <select id="todayGoal">
+      <option>今日やりたいこと：課題</option>
+      <option>今日やりたいこと：復習</option>
+      <option>今日やりたいこと：休憩</option>
+      <option>今日やりたいこと：作業</option>
+    </select>
 
-        <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">今日のおすすめ</h2>
+    <button onclick="addTask()">課題を追加</button>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="border rounded-2xl p-4">
-              <h3 className="font-bold mb-2">午前</h3>
-              <p>集中系の課題を進めよう！</p>
-            </div>
+    <div class="message" id="recommendMessage"></div>
+  </div>
 
-            <div className="border rounded-2xl p-4">
-              <h3 className="font-bold mb-2">午後</h3>
-              <p>軽めの復習がおすすめ！</p>
-            </div>
+  <div class="card">
+    <h2>空きPC情報</h2>
+    <p>PC室A：空き 12台</p>
+    <p>PC室B：空き 5台</p>
+    <p>※ 後でデータ追加予定</p>
+  </div>
 
-            <div className="border rounded-2xl p-4">
-              <h3 className="font-bold mb-2">休憩</h3>
-              <p>カフェでリフレッシュしてみよう！</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+  <div class="card">
+    <h2>教室コンセント情報</h2>
+    <ul>
+      <li>301教室：前列にあり</li>
+      <li>502教
