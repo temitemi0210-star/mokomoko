@@ -1,258 +1,247 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>らくらくバス時刻 Pro</title>
-    <style>
-        :root {
-            --bg-color: #f4f4f9;
-            --main-blue: #005bac;
-            --accent-orange: #ff8c00;
-            --danger-red: #e63946;
-            --text-black: #333;
-        }
+export default function StudySupportApp() {
+  const { useState, useMemo } = React;
 
-        body {
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-black);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            overflow: hidden;
-        }
+  const [tasks, setTasks] = useState([]);
+  const [title, setTitle] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [priority, setPriority] = useState("中");
 
-        /* 設定画面 */
-        #setup-screen {
-            display: none;
-            width: 90%;
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            overflow-y: auto;
-            max-height: 90vh;
-        }
+  const taskTemplates = {
+    レポート: ["テーマ決定", "資料収集", "構成作成", "本文執筆", "推敲"],
+    プレゼン: ["テーマ決定", "資料収集", "スライド作成", "発表練習"],
+    テスト: ["範囲確認", "ノート整理", "問題演習", "復習"]
+  };
 
-        input, textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
+  const generateSubtasks = (taskTitle) => {
+    for (const key in taskTemplates) {
+      if (taskTitle.includes(key)) {
+        return taskTemplates[key].map((sub, index) => ({
+          id: Date.now() + index,
+          title: sub,
+          completed: false
+        }));
+      }
+    }
 
-        /* メイン画面 */
-        #main-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
+    return [
+      {
+        id: Date.now(),
+        title: "タスクを細分化する",
+        completed: false
+      }
+    ];
+  };
 
-        .route-info { text-align: center; width: 90%; margin-bottom: 20px; }
-        .station-name { font-size: 1.8rem; font-weight: bold; color: var(--main-blue); }
-        .arrow { font-size: 1.5rem; color: #666; margin: 5px 0; }
+  const addTask = () => {
+    if (!title || !deadline) return;
 
-        .timer-container {
-            background: white;
-            width: 85%;
-            padding: 40px 10px;
-            border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            text-align: center;
-            border: 5px solid var(--main-blue);
-            position: relative;
-        }
+    const newTask = {
+      id: Date.now(),
+      title,
+      deadline,
+      priority,
+      completed: false,
+      subtasks: generateSubtasks(title)
+    };
 
-        .time-left {
-            font-size: 6rem;
-            font-weight: 900;
-            color: var(--accent-orange);
-            line-height: 1;
-        }
+    setTasks([...tasks, newTask]);
+    setTitle("");
+    setDeadline("");
+    setPriority("中");
+  };
 
-        .unit { font-size: 2rem; margin-left: 5px; }
+  const toggleTask = (id) => {
+    setTasks(
+      tasks.map((task) =>
+        task.id === id
+          ? { ...task, completed: !task.completed }
+          : task
+      )
+    );
+  };
 
-        .controls { margin-top: 30px; width: 90%; display: flex; flex-direction: column; gap: 10px; }
-        
-        button {
-            width: 100%;
-            padding: 18px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+  const toggleSubtask = (taskId, subtaskId) => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id !== taskId) return task;
 
-        .swap-btn { background-color: var(--main-blue); color: white; }
-        .settings-btn { background-color: #ddd; color: #555; font-size: 0.9rem; padding: 10px; }
-        
-        .imminent { color: var(--danger-red) !important; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-    </style>
-</head>
-<body>
-
-    <!-- 設定画面 -->
-    <div id="setup-screen">
-        <h2>初期設定</h2>
-        <p>バス停名と時刻表を入力してください。</p>
-        <label>バス停A（起点）</label>
-        <input type="text" id="input-a" placeholder="例：那覇インター">
-        <label>バス停B（終点）</label>
-        <input type="text" id="input-b" placeholder="例：沖縄南インター">
-        
-        <label>A → B の時刻表（半角 08:00, 08:30...）</label>
-        <textarea id="time-a-b" rows="4" placeholder="08:00, 08:30, 09:15"></textarea>
-
-        <label>B → A の時刻表</label>
-        <textarea id="time-b-a" rows="4" placeholder="07:45, 08:20, 09:00"></textarea>
-
-        <button class="swap-btn" onclick="saveSettings()">設定を保存して開始</button>
-    </div>
-
-    <!-- メイン表示画面 -->
-    <div id="main-screen">
-        <div class="route-info">
-            <div id="display-origin" class="station-name">--</div>
-            <div class="arrow">▼</div>
-            <div id="display-destination" class="station-name">--</div>
-        </div>
-
-        <div class="timer-container">
-            <div id="countdown" class="time-left">--</div>
-            <div id="bus-arrival" style="font-weight:bold; margin-top:10px;">出発時刻: --:--</div>
-        </div>
-
-        <div class="controls">
-            <button class="swap-btn" onclick="swapRoute()">行き先を入れ替える</button>
-            <button class="settings-btn" onclick="showSetup()">設定を変更する</button>
-        </div>
-    </div>
-
-    <script>
-        let config = {
-            stationA: "",
-            stationB: "",
-            timesAB: [],
-            timesBA: []
+        return {
+          ...task,
+          subtasks: task.subtasks.map((sub) =>
+            sub.id === subtaskId
+              ? { ...sub, completed: !sub.completed }
+              : sub
+          )
         };
-        let currentMode = "AB";
+      })
+    );
+  };
 
-        // 初期読み込み
-        window.onload = () => {
-            const saved = localStorage.getItem("busConfig");
-            if (saved) {
-                config = JSON.parse(saved);
-                startApp();
-            } else {
-                showSetup();
-            }
-        };
+  const progress = useMemo(() => {
+    if (tasks.length === 0) return 0;
 
-        function showSetup() {
-            document.getElementById("main-screen").style.display = "none";
-            document.getElementById("setup-screen").style.display = "block";
-            document.getElementById("input-a").value = config.stationA;
-            document.getElementById("input-b").value = config.stationB;
-            document.getElementById("time-a-b").value = config.timesAB.join(", ");
-            document.getElementById("time-b-a").value = config.timesBA.join(", ");
-        }
+    const completed = tasks.filter((task) => task.completed).length;
+    return Math.round((completed / tasks.length) * 100);
+  }, [tasks]);
 
-        function saveSettings() {
-            config.stationA = document.getElementById("input-a").value;
-            config.stationB = document.getElementById("input-b").value;
-            config.timesAB = document.getElementById("time-a-b").value.split(/[,、\s\n]+/).filter(t => t.includes(":"));
-            config.timesBA = document.getElementById("time-b-a").value.split(/[,、\s\n]+/).filter(t => t.includes(":"));
-            
-            localStorage.setItem("busConfig", JSON.stringify(config));
-            startApp();
-        }
+  const encouragement = () => {
+    if (progress === 100) return "全部完了！お疲れさま！";
+    if (progress >= 70) return "かなり順調です！";
+    if (progress >= 40) return "いい感じです！";
+    if (progress > 0) return "少しずつ進めています！";
+    return "まずは1つ終わらせてみよう！";
+  };
 
-        function startApp() {
-            document.getElementById("setup-screen").style.display = "none";
-            document.getElementById("main-screen").style.display = "flex";
-            updateDisplayNames();
-            updateTimer();
-        }
+  return (
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-4xl font-bold mb-6 text-center">
+          大学生向け学習支援アプリ
+        </h1>
 
-        function updateDisplayNames() {
-            const origin = document.getElementById("display-origin");
-            const dest = document.getElementById("display-destination");
-            if (currentMode === "AB") {
-                origin.innerText = config.stationA;
-                dest.innerText = config.stationB;
-            } else {
-                origin.innerText = config.stationB;
-                dest.innerText = config.stationA;
-            }
-        }
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-2xl font-semibold mb-4">課題追加</h2>
 
-        function updateTimer() {
-            const now = new Date();
-            const currentTimes = (currentMode === "AB") ? config.timesAB : config.timesBA;
-            
-            let nextBusStr = null;
-            let minDiff = Infinity;
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="課題名を入力"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full border rounded-xl p-3"
+              />
 
-            for (let timeStr of currentTimes) {
-                const [h, m] = timeStr.split(":").map(Number);
-                const busDate = new Date();
-                busDate.setHours(h, m, 0, 0);
+              <input
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                className="w-full border rounded-xl p-3"
+              />
 
-                // 深夜対応：もし現在の時間がバスの時間を過ぎていたら翌日として扱う
-                if (busDate < now) {
-                    busDate.setDate(busDate.getDate() + 1);
-                }
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full border rounded-xl p-3"
+              >
+                <option>高</option>
+                <option>中</option>
+                <option>低</option>
+              </select>
 
-                const diff = busDate - now;
-                if (diff < minDiff) {
-                    minDiff = diff;
-                    nextBusStr = timeStr;
-                }
-            }
+              <button
+                onClick={addTask}
+                className="w-full bg-black text-white rounded-xl p-3 hover:opacity-80"
+              >
+                課題を追加
+              </button>
+            </div>
+          </div>
 
-            const countdownElement = document.getElementById("countdown");
-            const arrivalElement = document.getElementById("bus-arrival");
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-2xl font-semibold mb-4">進捗状況</h2>
 
-            if (nextBusStr) {
-                const diffMin = Math.floor(minDiff / 1000 / 60);
-                const diffSec = Math.floor((minDiff / 1000) % 60);
+            <div className="mb-4">
+              <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                <div
+                  className="bg-green-500 h-6 transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
 
-                if (diffMin === 0) {
-                    countdownElement.innerHTML = `<span class="imminent">まもなく</span>`;
-                } else if (diffMin >= 60) {
-                    const h = Math.floor(diffMin / 60);
-                    const m = diffMin % 60;
-                    countdownElement.innerHTML = `${h}<span class="unit">時</span>${m}<span class="unit">分</span>`;
-                } else {
-                    countdownElement.innerHTML = `${diffMin}<span class="unit">分</span>`;
-                }
-                
-                countdownElement.classList.toggle("imminent", diffMin === 0);
-                arrivalElement.innerText = `出発予定時刻: ${nextBusStr}`;
-            } else {
-                countdownElement.innerText = "終了";
-                arrivalElement.innerText = "時刻表を登録してください";
-            }
-        }
+            <p className="text-lg font-medium">進捗率：{progress}%</p>
+            <p className="mt-2 text-gray-700">{encouragement()}</p>
+          </div>
+        </div>
 
-        function swapRoute() {
-            currentMode = (currentMode === "AB") ? "BA" : "AB";
-            updateDisplayNames();
-            updateTimer();
-        }
+        <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-2xl font-semibold mb-6">課題一覧</h2>
 
-        setInterval(updateTimer, 1000);
-    </script>
-</body>
-</html>
+          {tasks.length === 0 ? (
+            <p className="text-gray-500">まだ課題がありません。</p>
+          ) : (
+            <div className="space-y-6">
+              {tasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="border rounded-2xl p-5 bg-gray-50"
+                >
+                  <div className="flex justify-between items-center flex-wrap gap-3">
+                    <div>
+                      <h3 className="text-xl font-bold">{task.title}</h3>
+                      <p className="text-sm text-gray-600">
+                        締切：{task.deadline}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        優先度：{task.priority}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => toggleTask(task.id)}
+                      className={`px-4 py-2 rounded-xl text-white ${
+                        task.completed
+                          ? "bg-green-600"
+                          : "bg-gray-700"
+                      }`}
+                    >
+                      {task.completed ? "完了済み" : "未完了"}
+                    </button>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="font-semibold mb-2">タスク分割</h4>
+
+                    <div className="space-y-2">
+                      {task.subtasks.map((sub) => (
+                        <label
+                          key={sub.id}
+                          className="flex items-center gap-3 bg-white rounded-xl p-3"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={sub.completed}
+                            onChange={() =>
+                              toggleSubtask(task.id, sub.id)
+                            }
+                          />
+                          <span
+                            className={sub.completed ? "line-through" : ""}
+                          >
+                            {sub.title}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 bg-white rounded-2xl shadow-lg p-6">
+          <h2 className="text-2xl font-semibold mb-4">今日のおすすめ</h2>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="border rounded-2xl p-4">
+              <h3 className="font-bold mb-2">午前</h3>
+              <p>集中系の課題を進めよう！</p>
+            </div>
+
+            <div className="border rounded-2xl p-4">
+              <h3 className="font-bold mb-2">午後</h3>
+              <p>軽めの復習がおすすめ！</p>
+            </div>
+
+            <div className="border rounded-2xl p-4">
+              <h3 className="font-bold mb-2">休憩</h3>
+              <p>カフェでリフレッシュしてみよう！</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
