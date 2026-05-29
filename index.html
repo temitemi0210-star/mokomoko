@@ -120,7 +120,7 @@
 
     <input type="text" id="taskName" placeholder="課題名を入力">
 
-    <input type="text" id="taskSource" placeholder="課題の起源（例：情報理論）">
+    <input type="text" id="taskMemo" placeholder="課題のメモ（例：参考資料を探す）">
 
     <select id="importance">
       <option value="high">重要度：高</option>
@@ -200,7 +200,7 @@
 
   function addTask() {
     const taskName = document.getElementById('taskName').value;
-    const taskSource = document.getElementById('taskSource').value;
+    const taskMemo = document.getElementById('taskMemo').value;
     const importance = document.getElementById('importance').value;
     const deadline = document.getElementById('deadline').value;
     const weight = document.getElementById('weight').value;
@@ -214,7 +214,7 @@
 
     const task = {
       taskName,
-      taskSource,
+      taskMemo,
       importance,
       deadline,
       weight,
@@ -231,6 +231,7 @@
     recommendation(mood, todayGoal);
 
     document.getElementById('taskName').value = '';
+    document.getElementById('taskMemo').value = '';
   }
 
   function removeExpiredTasks() {
@@ -266,7 +267,7 @@
 
       div.innerHTML = `
         <h3 class="cute">📝 ${task.taskName}</h3>
-        <p>授業：${task.taskSource}</p>
+        <p>メモ：${task.taskMemo}</p>
         <p>締切：${task.deadline}</p>
         <p>${task.weight}</p>
         <p>${task.mood}</p>
