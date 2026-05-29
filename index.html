@@ -116,9 +116,11 @@
 <div class="container">
 
   <div class="card">
-    <h2>課題追加</h2>
+    <h2>📚 課題追加</h2>
 
     <input type="text" id="taskName" placeholder="課題名を入力">
+
+    <input type="text" id="taskSource" placeholder="課題の起源（例：情報理論）">
 
     <select id="importance">
       <option value="high">重要度：高</option>
@@ -129,10 +131,16 @@
     <input type="date" id="deadline">
 
     <select id="weight">
-      <option>課題の重さ：重い</option>
-      <option>課題の重さ：普通</option>
-      <option>課題の重さ：軽い</option>
+      <option value="heavy">課題の重さ：重い</option>
+      <option value="normal">課題の重さ：普通</option>
+      <option value="light">課題の重さ：軽い</option>
     </select>
+
+    <button onclick="addTask()">課題を追加</button>
+  </div>
+
+  <div class="card">
+    <h2>🌸 今日の状態</h2>
 
     <select id="mood">
       <option>今日の気分：元気</option>
@@ -148,8 +156,6 @@
       <option>今日やりたいこと：作業</option>
     </select>
 
-    <button onclick="addTask()">課題を追加</button>
-
     <div class="message" id="recommendMessage"></div>
   </div>
 
@@ -164,4 +170,145 @@
     <h2>教室コンセント情報</h2>
     <ul>
       <li>301教室：前列にあり</li>
-      <li>502教
+      <li>502教室：壁側のみ</li>
+      <li>図書館：多数あり</li>
+    </ul>
+    <p>※ 後でデータ追加予定</p>
+  </div>
+
+</div>
+
+<div class="container">
+  <div class="card" style="grid-column: 1/-1;">
+    <h2>🗂 課題一覧ページ</h2>
+    <p>重要度順に自動ソートされます！</p>
+
+    <div id="taskPage"></div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card" style="grid-column: 1/-1;">
+    <h2>⭐ 重要度順課題一覧</h2>
+    <div id="taskList"></div>
+  </div>
+</div>
+
+<script>
+  let tasks = [];
+
+  function addTask() {
+    const taskName = document.getElementById('taskName').value;
+    const taskSource = document.getElementById('taskSource').value;
+    const importance = document.getElementById('importance').value;
+    const deadline = document.getElementById('deadline').value;
+    const weight = document.getElementById('weight').value;
+    const mood = document.getElementById('mood').value;
+    const todayGoal = document.getElementById('todayGoal').value;
+
+    if(taskName === '') {
+      alert('課題名を入力してください！');
+      return;
+    }
+
+    const task = {
+      taskName,
+      taskSource,
+      importance,
+      deadline,
+      weight,
+      mood,
+      todayGoal,
+      completed: false
+    };
+
+    tasks.push(task);
+
+    sortTasks();
+    renderTasks();
+    recommendation(mood, todayGoal);
+
+    document.getElementById('taskName').value = '';
+  }
+
+  function sortTasks() {
+    const order = {
+      high: 1,
+      medium: 2,
+      low: 3
+    };
+
+    tasks.sort((a, b) => order[a.importance] - order[b.importance]);
+  }
+
+  function renderTasks() {
+    const taskList = document.getElementById('taskList');
+    taskList.innerHTML = '';
+
+    tasks.forEach((task, index) => {
+      const div = document.createElement('div');
+      div.classList.add('task');
+      div.classList.add(task.importance);
+
+      div.innerHTML = `
+        <h3 class="cute">📝 ${task.taskName}</h3>
+        <p>授業：${task.taskSource}</p>
+        <p>締切：${task.deadline}</p>
+        <p>${task.weight}</p>
+        <p>${task.mood}</p>
+        <p>${task.todayGoal}</p>
+        <button class="complete-btn" onclick="completeTask(${index})">
+          ${task.completed ? '完了済み 🌸' : '課題完了！'}
+        </button>
+      `;
+
+      taskList.appendChild(div);
+
+      const taskPage = document.getElementById('taskPage');
+
+      const pageCard = document.createElement('div');
+      pageCard.classList.add('task');
+      pageCard.innerHTML = `
+        <h3>📖 ${task.taskName}</h3>
+        <p>授業：${task.taskSource}</p>
+        <p>締切：${task.deadline}</p>
+        <p>${task.weight}</p>
+      `;
+
+      taskPage.appendChild(pageCard);
+    });
+  }
+
+  function completeTask(index) {
+    tasks[index].completed = true;
+    renderTasks();
+
+    alert('えらい！✨ 課題完了です！すごい！');
+  }
+
+  function recommendation(mood, goal) {
+    const msg = document.getElementById('recommendMessage');
+
+    const highTasks = tasks.filter(task => task.importance === 'high').length;
+    const heavyTasks = tasks.filter(task => task.weight === 'heavy').length;
+
+    if(mood.includes('眠い')) {
+      msg.innerHTML = '☕ 空きコマはカフェで軽めの復習がおすすめ！';
+    }
+    else if(mood.includes('集中')) {
+      msg.innerHTML = '🔥 空きコマで重い課題を一気に進めよう！';
+    }
+    else if(goal.includes('休憩')) {
+      msg.innerHTML = '🌸 空きコマは友達と休憩してリフレッシュ！';
+    }
+    else if(highTasks >= 2 || heavyTasks >= 2) {
+      msg.innerHTML = '📚 図書館やPC室で集中して進めるのがおすすめ！';
+    }
+    else {
+      msg.innerHTML = '✨ 空きコマで少しずつ課題を進めよう！';
+    }
+  }
+</script>
+
+</body>
+</html>
