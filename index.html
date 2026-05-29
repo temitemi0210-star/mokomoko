@@ -196,7 +196,7 @@
 </div>
 
 <script>
-  let tasks = [];
+  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
   function addTask() {
     const taskName = document.getElementById('taskName').value;
@@ -225,6 +225,8 @@
 
     tasks.push(task);
 
+    saveTasks();
+
     removeExpiredTasks();
     sortTasks();
     renderTasks();
@@ -232,6 +234,10 @@
 
     document.getElementById('taskName').value = '';
     document.getElementById('taskMemo').value = '';
+  }
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
   }
 
   function removeExpiredTasks() {
@@ -243,6 +249,8 @@
       const deadlineDate = new Date(task.deadline);
       return deadlineDate >= today;
     });
+
+    saveTasks();
   }
 
   function sortTasks() {
@@ -296,9 +304,16 @@
 
   function completeTask(index) {
     tasks[index].completed = true;
+    saveTasks();
     renderTasks();
 
     alert('えらい！✨ 課題完了です！すごい！');
+  }
+
+  window.onload = function() {
+    removeExpiredTasks();
+    sortTasks();
+    renderTasks();
   }
 
   function recommendation(mood, goal) {
