@@ -190,6 +190,7 @@
 <div class="container">
   <div class="card" style="grid-column: 1/-1;">
     <h2>⭐ 重要度順課題一覧</h2>
+    <p>※ 締切を過ぎた課題は自動で削除されます。</p>
     <div id="taskList"></div>
   </div>
 </div>
@@ -224,11 +225,23 @@
 
     tasks.push(task);
 
+    removeExpiredTasks();
     sortTasks();
     renderTasks();
     recommendation(mood, todayGoal);
 
     document.getElementById('taskName').value = '';
+  }
+
+  function removeExpiredTasks() {
+    const today = new Date();
+
+    tasks = tasks.filter(task => {
+      if(!task.deadline) return true;
+
+      const deadlineDate = new Date(task.deadline);
+      return deadlineDate >= today;
+    });
   }
 
   function sortTasks() {
@@ -242,6 +255,7 @@
   }
 
   function renderTasks() {
+    removeExpiredTasks();
     const taskList = document.getElementById('taskList');
     taskList.innerHTML = '';
 
