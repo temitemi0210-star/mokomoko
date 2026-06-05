@@ -1,343 +1,718 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大学生向け学習支援アプリ</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: #fff7fb;
-      color: #555;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>大学生向け学習支援アプリ</title>
 
-    header {
-      background: #ffd6e7;
-      padding: 20px;
-      text-align: center;
-      font-size: 28px;
-      font-weight: bold;
-      color: #7a4e65;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+<style>
 
-    .container {
-      max-width: 1100px;
-      margin: 20px auto;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-    }
+body{
+  font-family:sans-serif;
+  background:#fff7fb;
+  margin:0;
+}
 
-    .card {
-      background: #ffffff;
-      border-radius: 25px;
-      padding: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-    }
+header{
+  background:#ffd6e7;
+  padding:20px;
+  text-align:center;
+  font-size:28px;
+  font-weight:bold;
+}
 
-    h2 {
-      color: #c76b98;
-    }
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
 
-    input, select {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 15px;
-      border: 2px solid #ffd6e7;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
+  display:grid;
+  grid-template-columns:
+  repeat(auto-fit,minmax(320px,1fr));
 
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 15px;
-      background: #ff9ec7;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
+  gap:20px;
+}
 
-    button:hover {
-      opacity: 0.85;
-    }
+.card{
+  background:white;
+  border-radius:20px;
+  padding:20px;
 
-    .task {
-      background: #fff0f6;
-      border-radius: 20px;
-      padding: 15px;
-      margin-top: 15px;
-    }
+  box-shadow:
+  0 2px 8px rgba(0,0,0,.1);
+}
 
-    .high {
-      border-left: 8px solid #ff6b81;
-    }
+input,
+select,
+button{
 
-    .medium {
-      border-left: 8px solid #ffd166;
-    }
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  box-sizing:border-box;
+}
 
-    .low {
-      border-left: 8px solid #7bd389;
-    }
+button{
 
-    .complete-btn {
-      background: #8fd3ff;
-    }
+  background:#ff9ec7;
+  color:white;
 
-    .message {
-      margin-top: 15px;
-      font-weight: bold;
-      color: #d45d8f;
-    }
+  border:none;
+  border-radius:10px;
+}
 
-    ul {
-      padding-left: 20px;
-    }
+.task{
 
-    .cute {
-      font-size: 20px;
-    }
-  </style>
+  background:#fff0f6;
+
+  padding:12px;
+  margin-top:10px;
+
+  border-radius:12px;
+}
+
+.high{
+  border-left:6px solid #ff6b81;
+}
+
+.medium{
+  border-left:6px solid #ffd166;
+}
+
+.low{
+  border-left:6px solid #7bd389;
+}
+
+</style>
 </head>
+
 <body>
 
 <header>
-  🎀 大学生向け学習サポートアプリ 🎀
+🎀 大学生向け学習サポートアプリ 🎀
 </header>
 
 <div class="container">
 
   <div class="card">
+
     <h2>📚 課題追加</h2>
 
-    <input type="text" id="taskName" placeholder="課題名を入力">
+    <input
+      id="taskName"
+      placeholder="課題名">
 
-    <input type="text" id="taskMemo" placeholder="課題のメモ（例：参考資料を探す）">
+    <input
+      id="taskMemo"
+      placeholder="課題メモ">
 
     <select id="importance">
-      <option value="high">重要度：高</option>
-      <option value="medium">重要度：中</option>
-      <option value="low">重要度：低</option>
+
+      <option value="high">
+        重要度：高
+      </option>
+
+      <option value="medium">
+        重要度：中
+      </option>
+
+      <option value="low">
+        重要度：低
+      </option>
+
     </select>
 
-    <input type="date" id="deadline">
+    <input
+      type="date"
+      id="deadline">
 
     <select id="weight">
-      <option value="heavy">課題の重さ：重い</option>
-      <option value="normal">課題の重さ：普通</option>
-      <option value="light">課題の重さ：軽い</option>
+
+      <option value="heavy">
+        課題の重さ：重い
+      </option>
+
+      <option value="normal">
+        課題の重さ：普通
+      </option>
+
+      <option value="light">
+        課題の重さ：軽い
+      </option>
+
     </select>
 
-    <button onclick="addTask()">課題を追加</button>
+    <button onclick="addTask()">
+      課題追加
+    </button>
+
   </div>
 
   <div class="card">
+
     <h2>🌸 今日の状態</h2>
 
     <select id="mood">
-      <option>今日の気分：元気</option>
-      <option>今日の気分：眠い</option>
-      <option>今日の気分：やる気が出ない</option>
-      <option>今日の気分：集中できる</option>
+
+      <option>
+        今日の気分：元気
+      </option>
+
+      <option>
+        今日の気分：眠い
+      </option>
+
+      <option>
+        今日の気分：やる気が出ない
+      </option>
+
+      <option>
+        今日の気分：集中できる
+      </option>
+
     </select>
 
     <select id="todayGoal">
-      <option>今日やりたいこと：課題</option>
-      <option>今日やりたいこと：復習</option>
-      <option>今日やりたいこと：休憩</option>
-      <option>今日やりたいこと：作業</option>
+
+      <option>
+        今日やりたいこと：課題
+      </option>
+
+      <option>
+        今日やりたいこと：復習
+      </option>
+
+      <option>
+        今日やりたいこと：休憩
+      </option>
+
     </select>
 
-    <div class="message" id="recommendMessage"></div>
+    <div id="recommendMessage"></div>
+
   </div>
 
   <div class="card">
-    <h2>空きPC情報</h2>
-    <p>PC室A：空き 12台</p>
-    <p>PC室B：空き 5台</p>
-    <p>※ 後でデータ追加予定</p>
+
+    <h2>
+      💻 今空いているPC室
+    </h2>
+
+    <div id="availableRooms"></div>
+
   </div>
 
   <div class="card">
-    <h2>教室コンセント情報</h2>
+
+    <h2>
+      🔌 コンセント情報
+    </h2>
+
     <ul>
-      <li>301教室：前列にあり</li>
-      <li>502教室：壁側のみ</li>
       <li>図書館：多数あり</li>
+      <li>杏彩館：利用可能</li>
     </ul>
-    <p>※ 後でデータ追加予定</p>
+
   </div>
 
 </div>
 
 <div class="container">
-  <div class="card" style="grid-column: 1/-1;">
-    <h2>🗂 課題一覧ページ</h2>
-    <p>重要度順に自動ソートされます！</p>
 
-    <div id="taskPage"></div>
-  </div>
-</div>
+  <div
+    class="card"
+    style="grid-column:1/-1">
 
-<div class="container">
-  <div class="card" style="grid-column: 1/-1;">
-    <h2>⭐ 重要度順課題一覧</h2>
-    <p>※ 締切を過ぎた課題は自動で削除されます。</p>
+    <h2>課題一覧</h2>
+
     <div id="taskList"></div>
+
   </div>
+
 </div>
 
 <script>
-  let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let tasks =
+JSON.parse(
+  localStorage.getItem("tasks")
+) || [];
 
-  function addTask() {
-    const taskName = document.getElementById('taskName').value;
-    const taskMemo = document.getElementById('taskMemo').value;
-    const importance = document.getElementById('importance').value;
-    const deadline = document.getElementById('deadline').value;
-    const weight = document.getElementById('weight').value;
-    const mood = document.getElementById('mood').value;
-    const todayGoal = document.getElementById('todayGoal').value;
+const pcRooms = {
 
-    if(taskName === '') {
-      alert('課題名を入力してください！');
-      return;
+  "演1":{
+    "月":["昼休み"],
+    "火":["昼休み"],
+    "水":["2限","昼休み"],
+    "木":["昼休み","3限","4限","5限"],
+    "金":["昼休み","4限","5限"]
+  },
+
+  "演2":{
+    "月":["1限","昼休み"],
+    "火":["昼休み","3限"],
+    "水":["1限","昼休み","3限"],
+    "木":["1限","昼休み","3限","4限","5限"],
+    "金":["昼休み"]
+  },
+
+  "演3":{
+    "月":["1限","昼休み","5限"],
+    "火":["2限","昼休み","3限"],
+    "水":["昼休み"],
+    "木":["1限","昼休み","3限","4限","5限"],
+    "金":["1限","昼休み","4限","5限"]
+  },
+
+  "演45":{
+    "月":["1限","昼休み","5限"],
+    "火":["1限","2限","昼休み","4限","5限"],
+    "水":["1限","2限","昼休み","3限","5限"],
+    "木":["1限","昼休み","3限","4限","5限"],
+    "金":["1限","昼休み","3限","4限","5限"]
+  },
+
+  "演6":{
+    "月":["昼休み","3限"],
+    "火":["昼休み"],
+    "水":["1限","2限","昼休み","4限","5限"],
+    "木":["2限","昼休み","3限","4限","5限"],
+    "金":["1限","昼休み","4限","5限"]
+  },
+
+  "演7":{
+    "月":["1限","昼休み","3限","5限"],
+    "火":["1限","昼休み","3限","4限","5限"],
+    "水":["1限","昼休み","3限","5限"],
+    "木":["1限","昼休み","3限","4限","5限"],
+    "金":["1限","2限","昼休み","3限","4限","5限"]
+  }
+
+};
+
+function saveTasks(){
+
+  localStorage.setItem(
+    "tasks",
+    JSON.stringify(tasks)
+  );
+}
+
+function removeExpiredTasks(){
+
+  const today = new Date();
+
+  today.setHours(
+    0,0,0,0
+  );
+
+  tasks = tasks.filter(task => {
+
+    if(!task.deadline){
+      return true;
     }
 
-    const task = {
-      taskName,
-      taskMemo,
-      importance,
-      deadline,
-      weight,
-      mood,
-      todayGoal,
-      completed: false
-    };
+    return (
+      new Date(task.deadline)
+      >= today
+    );
 
-    tasks.push(task);
+  });
 
-    saveTasks();
+  saveTasks();
+}
 
-    removeExpiredTasks();
-    sortTasks();
-    renderTasks();
-    recommendation(mood, todayGoal);
+function addTask(){
 
-    document.getElementById('taskName').value = '';
-    document.getElementById('taskMemo').value = '';
+  const task = {
+
+    taskName:
+      document.getElementById(
+        "taskName"
+      ).value,
+
+    taskMemo:
+      document.getElementById(
+        "taskMemo"
+      ).value,
+
+    importance:
+      document.getElementById(
+        "importance"
+      ).value,
+
+    deadline:
+      document.getElementById(
+        "deadline"
+      ).value,
+
+    weight:
+      document.getElementById(
+        "weight"
+      ).value,
+
+    completed:false
+  };
+
+  if(task.taskName === ""){
+
+    alert(
+      "課題名を入力してください"
+    );
+
+    return;
   }
 
-  function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }
+  tasks.push(task);
 
-  function removeExpiredTasks() {
-    const today = new Date();
+  saveTasks();
 
-    tasks = tasks.filter(task => {
-      if(!task.deadline) return true;
+  renderTasks();
 
-      const deadlineDate = new Date(task.deadline);
-      return deadlineDate >= today;
-    });
+  document.getElementById(
+    "taskName"
+  ).value = "";
 
-    saveTasks();
-  }
+  document.getElementById(
+    "taskMemo"
+  ).value = "";
+}
 
-  function sortTasks() {
-    const order = {
-      high: 1,
-      medium: 2,
-      low: 3
-    };
+function renderTasks(){
 
-    tasks.sort((a, b) => order[a.importance] - order[b.importance]);
-  }
+  removeExpiredTasks();
 
-  function renderTasks() {
-    removeExpiredTasks();
-    const taskList = document.getElementById('taskList');
-    taskList.innerHTML = '';
+  const order = {
 
-    tasks.forEach((task, index) => {
-      const div = document.createElement('div');
-      div.classList.add('task');
-      div.classList.add(task.importance);
+    high:1,
+    medium:2,
+    low:3
 
-      div.innerHTML = `
-        <h3 class="cute">📝 ${task.taskName}</h3>
-        <p>メモ：${task.taskMemo}</p>
-        <p>締切：${task.deadline}</p>
-        <p>${task.weight}</p>
-        <p>${task.mood}</p>
-        <p>${task.todayGoal}</p>
-        <button class="complete-btn" onclick="completeTask(${index})">
-          ${task.completed ? '完了済み 🌸' : '課題完了！'}
+  };
+
+  tasks.sort(
+    (a,b) =>
+      order[a.importance]
+      -
+      order[b.importance]
+  );
+
+  const taskList =
+  document.getElementById(
+    "taskList"
+  );
+
+  taskList.innerHTML = "";
+
+  tasks.forEach(
+    (task,index) => {
+
+      taskList.innerHTML +=
+      `
+      <div class="task ${task.importance}">
+
+        <h3>
+          📝 ${task.taskName}
+        </h3>
+
+        <p>
+          メモ：
+          ${task.taskMemo}
+        </p>
+
+        <p>
+          締切：
+          ${task.deadline}
+        </p>
+
+        <p>
+          ${task.weight}
+        </p>
+
+        <button
+          onclick=
+          "completeTask(${index})">
+
+          ${
+            task.completed
+            ?
+            "完了済み🌸"
+            :
+            "課題完了！"
+          }
+
         </button>
+
+      </div>
       `;
+  });
 
-      taskList.appendChild(div);
+  recommendation();
+}
 
-      const taskPage = document.getElementById('taskPage');
+function completeTask(index){
 
-      const pageCard = document.createElement('div');
-      pageCard.classList.add('task');
-      pageCard.innerHTML = `
-        <h3>📖 ${task.taskName}</h3>
-        <p>授業：${task.taskSource}</p>
-        <p>締切：${task.deadline}</p>
-        <p>${task.weight}</p>
-      `;
+  tasks[index].completed = true;
 
-      taskPage.appendChild(pageCard);
-    });
+  saveTasks();
+
+  renderTasks();
+
+  const praise = [
+    "えらい！✨",
+    "すごい！🌸",
+    "よく頑張ったね！💖",
+    "着実に進んでる！🎀",
+    "その調子！☀️"
+  ];
+
+  alert(
+    praise[
+      Math.floor(
+        Math.random() * praise.length
+      )
+    ]
+  );
+}
+
+
+function recommendation(){
+
+  const mood =
+    document.getElementById(
+      "mood"
+    ).value;
+
+  const goal =
+    document.getElementById(
+      "todayGoal"
+    ).value;
+
+  const msg =
+    document.getElementById(
+      "recommendMessage"
+    );
+
+  const highTasks =
+    tasks.filter(
+      t => t.importance === "high"
+    ).length;
+
+  const heavyTasks =
+    tasks.filter(
+      t => t.weight === "heavy"
+    ).length;
+
+  const day =
+    getJapaneseDay();
+
+  const period =
+    getCurrentPeriod();
+
+  let availableRooms = [];
+
+  if(period){
+
+    for(const room in pcRooms){
+
+      if(
+        pcRooms[room][day] &&
+        pcRooms[room][day].includes(period)
+      ){
+        availableRooms.push(room);
+      }
+    }
   }
 
-  function completeTask(index) {
-    tasks[index].completed = true;
-    saveTasks();
-    renderTasks();
+  if(mood.includes("眠い")){
 
-    alert('えらい！✨ 課題完了です！すごい！');
+    msg.innerHTML =
+      "☕ 眠そうなので図書館で軽めの復習がおすすめ！";
   }
 
-  window.onload = function() {
-    removeExpiredTasks();
-    sortTasks();
-    renderTasks();
+  else if(goal.includes("休憩")){
+
+    msg.innerHTML =
+      "🌸 空きコマは休憩してリフレッシュしよう！";
   }
 
-  function recommendation(mood, goal) {
-    const msg = document.getElementById('recommendMessage');
+  else if(
+    highTasks >= 2 ||
+    heavyTasks >= 2
+  ){
 
-    const highTasks = tasks.filter(task => task.importance === 'high').length;
-    const heavyTasks = tasks.filter(task => task.weight === 'heavy').length;
+    msg.innerHTML =
+      `🔥 重要な課題があります！<br>
+       ${availableRooms[0] || "図書館"}
+       で集中して進めましょう！`;
+  }
 
-    if(mood.includes('眠い')) {
-      msg.innerHTML = '☕ 空きコマはカフェで軽めの復習がおすすめ！';
-    }
-    else if(mood.includes('集中')) {
-      msg.innerHTML = '🔥 空きコマで重い課題を一気に進めよう！';
-    }
-    else if(goal.includes('休憩')) {
-      msg.innerHTML = '🌸 空きコマは友達と休憩してリフレッシュ！';
-    }
-    else if(highTasks >= 2 || heavyTasks >= 2) {
-      msg.innerHTML = '📚 図書館やPC室で集中して進めるのがおすすめ！';
-    }
-    else {
-      msg.innerHTML = '✨ 空きコマで少しずつ課題を進めよう！';
+  else if(mood.includes("集中")){
+
+    msg.innerHTML =
+      `💻 ${
+        availableRooms[0] || "図書館"
+      } が空いています！<br>
+      課題を進めるチャンスです！`;
+  }
+
+  else{
+
+    msg.innerHTML =
+      "📚 少しずつ課題を進めましょう！";
+  }
+}
+
+function getJapaneseDay(){
+
+  return [
+
+    "日",
+    "月",
+    "火",
+    "水",
+    "木",
+    "金",
+    "土"
+
+  ][new Date().getDay()];
+}
+
+function getCurrentPeriod(){
+
+  const now =
+    new Date();
+
+  const minutes =
+
+    now.getHours()*60
+    +
+    now.getMinutes();
+
+  if(
+    minutes >= 540
+    &&
+    minutes < 640
+  ){
+    return "1限";
+  }
+
+  if(
+    minutes >= 650
+    &&
+    minutes < 750
+  ){
+    return "2限";
+  }
+
+  if(
+    minutes >= 750
+    &&
+    minutes < 800
+  ){
+    return "昼休み";
+  }
+
+  if(
+    minutes >= 800
+    &&
+    minutes < 900
+  ){
+    return "3限";
+  }
+
+  if(
+    minutes >= 910
+    &&
+    minutes < 1010
+  ){
+    return "4限";
+  }
+
+  if(
+    minutes >= 1020
+    &&
+    minutes < 1120
+  ){
+    return "5限";
+  }
+
+  return null;
+}
+
+function displayAvailableRooms(){
+
+  const day =
+    getJapaneseDay();
+
+  const period =
+    getCurrentPeriod();
+
+  const target =
+    document.getElementById(
+      "availableRooms"
+    );
+
+  if(
+    period === null
+  ){
+
+    target.innerHTML =
+    "現在は授業時間外です";
+
+    return;
+  }
+
+  let available = [];
+
+  for(
+    const room
+    in
+    pcRooms
+  ){
+
+    if(
+
+      pcRooms[room][day]
+      &&
+      pcRooms[room][day]
+      .includes(period)
+
+    ){
+
+      available.push(room);
     }
   }
+
+  target.innerHTML =
+  `
+    <b>現在：</b>
+    ${day}曜日
+    ${period}
+    <br>
+
+    <b>
+      空いているPC室
+    </b>
+    <br>
+
+    ${
+      available.length > 0
+      ?
+      available.join("、")
+      :
+      "なし"
+    }
+  `;
+}
+
+window.onload =
+function(){
+
+  renderTasks();
+
+  displayAvailableRooms();
+
+};
 </script>
 
 </body>
