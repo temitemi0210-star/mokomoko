@@ -82,24 +82,6 @@ button{
 .low{
   border-left:6px solid #7bd389;
 }
-  #kijiponMessage{
-
-  margin-top:15px;
-
-  background:#fff0f6;
-
-  padding:15px;
-
-  border-radius:15px;
-
-  font-weight:bold;
-
-  color:#c76b98;
-}
-.overdue{
-  border-left:6px solid #ff0000;
-  background:#ffe5e5;
-}
 
 </style>
 </head>
@@ -169,8 +151,7 @@ button{
   <div class="card">
 
     <h2>🌸 今日の状態</h2>
-
-    <select id="mood">
+<select id="mood" onchange="recommendation()">
 
       <option>
         今日の気分：元気
@@ -189,8 +170,7 @@ button{
       </option>
 
     </select>
-
-    <select id="todayGoal">
+<select id="todayGoal" onchange="recommendation()">
 
       <option>
         今日やりたいこと：課題
@@ -207,21 +187,8 @@ button{
     </select>
 
     <div id="recommendMessage"></div>
-    <div class="card">
-
-  <h2>🌸 今日の状態</h2>
-
-  <select id="mood">
 
   </div>
-  <div class="card">
-
-  <h3>🎯 今日やるべき課題 TOP3</h3>
-
-  <div id="topTasks"></div>
-
-</div>
-  
 
   <div class="card">
 
@@ -263,11 +230,10 @@ button{
 </div>
 
 <script>
-let tasks =
+  let tasks =
 JSON.parse(
   localStorage.getItem("tasks")
 ) || [];
-
 const pcRooms = {
 
   "演1":{
@@ -320,6 +286,7 @@ const pcRooms = {
 
 };
 
+
 function saveTasks(){
 
   localStorage.setItem(
@@ -332,7 +299,9 @@ function removeExpiredTasks(){
 
   const today = new Date();
 
-  today.setHours(0,0,0,0);
+  today.setHours(
+    0,0,0,0
+  );
 
   tasks = tasks.filter(task => {
 
@@ -340,14 +309,11 @@ function removeExpiredTasks(){
       return true;
     }
 
-    const deadline =
-      new Date(task.deadline);
+    return (
+      new Date(task.deadline)
+      >= today
+    );
 
-    const diffDays =
-      (today - deadline) /
-      (1000 * 60 * 60 * 24);
-
-    return diffDays < 2;
   });
 
   saveTasks();
@@ -394,13 +360,11 @@ function addTask(){
     return;
   }
 
-tasks.push(task);
+  tasks.push(task);
 
-saveTasks();
+  saveTasks();
 
-renderTasks();
-
-displayTopTasks();
+  renderTasks();
 
   document.getElementById(
     "taskName"
@@ -439,25 +403,10 @@ function renderTasks(){
 
   tasks.forEach(
     (task,index) => {
-      let overdue = false;
-
-if(task.deadline){
-
-  const today = new Date();
-
-  today.setHours(0,0,0,0);
-
-  const deadline =
-    new Date(task.deadline);
-
-  overdue =
-    deadline < today;
-}
 
       taskList.innerHTML +=
       `
-<div class="task ${task.importance}
-${overdue ? 'overdue' : ''}">
+      <div class="task ${task.importance}">
 
         <h3>
           📝 ${task.taskName}
@@ -468,16 +417,10 @@ ${overdue ? 'overdue' : ''}">
           ${task.taskMemo}
         </p>
 
-<p>
-締切：
-${task.deadline}
-
-<br>
-
-⏳あと
-${getRemainingDays(task.deadline)}
-日
-</p>
+        <p>
+          締切：
+          ${task.deadline}
+        </p>
 
         <p>
           ${task.weight}
@@ -503,26 +446,7 @@ ${getRemainingDays(task.deadline)}
 
   recommendation();
 }
-function getRemainingDays(deadline){
 
-  if(!deadline){
-    return "-";
-  }
-
-  const today = new Date();
-
-  today.setHours(0,0,0,0);
-
-  const target =
-    new Date(deadline);
-
-  return Math.ceil(
-    (
-      target - today
-    ) /
-    (1000*60*60*24)
-  );
-}
 function completeTask(index){
 
   tasks[index].completed = true;
@@ -548,61 +472,22 @@ function completeTask(index){
   );
 }
 
-function displayTopTasks(){
-
-  const topTasks =
-    [...tasks]
-    .filter(task=>!task.completed)
-    .sort((a,b)=>{
-
-      const score={
-        high:3,
-        medium:2,
-        low:1
-      };
-
-      return (
-        score[b.importance]
-        -
-        score[a.importance]
-      );
-
-    })
-    .slice(0,3);
-
-  const target =
-    document.getElementById(
-      "topTasks"
-    );
-
-  target.innerHTML="";
-
-  topTasks.forEach(task=>{
-
-    target.innerHTML +=
-    `
-    <div class="task">
-      <b>${task.taskName}</b>
-    </div>
-    `;
-  });
-
-}
-
-
 function recommendation(){
 
   const mood =
-    document.getElementById("mood").value;
+    document.getElementById(
+      "mood"
+    ).value;
 
   const goal =
-    document.getElementById("todayGoal").value;
+    document.getElementById(
+      "todayGoal"
+    ).value;
 
   const msg =
-    document.getElementById("recommendMessage");
-
-  const kijipon =
-    document.getElementById("kijiponMessage");
+    document.getElementById(
+      "recommendMessage"
+    );
 
   const highTasks =
     tasks.filter(
@@ -614,8 +499,11 @@ function recommendation(){
       t => t.weight === "heavy"
     ).length;
 
-  const day = getJapaneseDay();
-  const period = getCurrentPeriod();
+  const day =
+    getJapaneseDay();
+
+  const period =
+    getCurrentPeriod();
 
   let availableRooms = [];
 
@@ -629,7 +517,6 @@ function recommendation(){
       ){
         availableRooms.push(room);
       }
-
     }
   }
 
@@ -637,32 +524,23 @@ function recommendation(){
 
     msg.innerHTML =
       "☕ 眠そうなので図書館で軽めの復習がおすすめ！";
-
-    kijipon.innerHTML =
-      "🐤きじぽん：無理しすぎないでね！";
-
   }
 
   else if(goal.includes("休憩")){
 
     msg.innerHTML =
       "🌸 空きコマは休憩してリフレッシュしよう！";
-
-    kijipon.innerHTML =
-      "🐤きじぽん：休憩も大切だよ🌸";
-
   }
 
-  else if(highTasks >= 2 || heavyTasks >= 2){
+  else if(
+    highTasks >= 2 ||
+    heavyTasks >= 2
+  ){
 
     msg.innerHTML =
       `🔥 重要な課題があります！<br>
-      ${availableRooms[0] || "図書館"}
-      で集中して進めましょう！`;
-
-    kijipon.innerHTML =
-      "🐤きじぽん：優先度の高い課題から進めよう！";
-
+       ${availableRooms[0] || "図書館"}
+       で集中して進めましょう！`;
   }
 
   else if(mood.includes("集中")){
@@ -672,21 +550,13 @@ function recommendation(){
         availableRooms[0] || "図書館"
       } が空いています！<br>
       課題を進めるチャンスです！`;
-
-    kijipon.innerHTML =
-      "🐤きじぽん：今がチャンス！";
-
   }
 
   else{
 
     msg.innerHTML =
       "📚 少しずつ課題を進めましょう！";
-
-    kijipon.innerHTML =
-      "🐤きじぽん：コツコツ進めよう！";
   }
-
 }
 
 function getJapaneseDay(){
@@ -840,8 +710,6 @@ function(){
   displayAvailableRooms();
 
   recommendation();
-
-  displayTopTasks();
 
 };
 </script>
