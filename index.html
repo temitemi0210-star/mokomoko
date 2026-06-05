@@ -216,7 +216,7 @@ button{
   </div>
   <div class="card">
 
-  <h2>🎯 今日やるべき課題 TOP3</h2>
+  <h3>🎯 今日やるべき課題 TOP3</h3>
 
   <div id="topTasks"></div>
 
@@ -588,22 +588,21 @@ function displayTopTasks(){
   });
 
 }
+
+
 function recommendation(){
 
   const mood =
-    document.getElementById(
-      "mood"
-    ).value;
+    document.getElementById("mood").value;
 
   const goal =
-    document.getElementById(
-      "todayGoal"
-    ).value;
+    document.getElementById("todayGoal").value;
 
   const msg =
-    document.getElementById(
-      "recommendMessage"
-    );
+    document.getElementById("recommendMessage");
+
+  const kijipon =
+    document.getElementById("kijiponMessage");
 
   const highTasks =
     tasks.filter(
@@ -615,11 +614,8 @@ function recommendation(){
       t => t.weight === "heavy"
     ).length;
 
-  const day =
-    getJapaneseDay();
-
-  const period =
-    getCurrentPeriod();
+  const day = getJapaneseDay();
+  const period = getCurrentPeriod();
 
   let availableRooms = [];
 
@@ -633,6 +629,7 @@ function recommendation(){
       ){
         availableRooms.push(room);
       }
+
     }
   }
 
@@ -640,23 +637,32 @@ function recommendation(){
 
     msg.innerHTML =
       "☕ 眠そうなので図書館で軽めの復習がおすすめ！";
+
+    kijipon.innerHTML =
+      "🐤きじぽん：無理しすぎないでね！";
+
   }
 
   else if(goal.includes("休憩")){
 
     msg.innerHTML =
       "🌸 空きコマは休憩してリフレッシュしよう！";
+
+    kijipon.innerHTML =
+      "🐤きじぽん：休憩も大切だよ🌸";
+
   }
 
-  else if(
-    highTasks >= 2 ||
-    heavyTasks >= 2
-  ){
+  else if(highTasks >= 2 || heavyTasks >= 2){
 
     msg.innerHTML =
       `🔥 重要な課題があります！<br>
-       ${availableRooms[0] || "図書館"}
-       で集中して進めましょう！`;
+      ${availableRooms[0] || "図書館"}
+      で集中して進めましょう！`;
+
+    kijipon.innerHTML =
+      "🐤きじぽん：優先度の高い課題から進めよう！";
+
   }
 
   else if(mood.includes("集中")){
@@ -666,44 +672,21 @@ function recommendation(){
         availableRooms[0] || "図書館"
       } が空いています！<br>
       課題を進めるチャンスです！`;
+
+    kijipon.innerHTML =
+      "🐤きじぽん：今がチャンス！";
+
   }
-const kijipon =
-document.getElementById(
-  "kijiponMessage"
-);
 
-if(mood.includes("眠い")){
-
-  kijipon.innerHTML =
-  "🐤きじぽん：無理しすぎないでね！";
-
-}
-
-else if(mood.includes("集中")){
-
-  kijipon.innerHTML =
-  "🐤きじぽん：今がチャンス！";
-
-}
-
-else if(goal.includes("休憩")){
-
-  kijipon.innerHTML =
-  "🐤きじぽん：休憩も大切だよ🌸";
-
-}
-
-else{
-
-  kijipon.innerHTML =
-  "🐤きじぽん：コツコツ進めよう！";
-
-}
   else{
 
     msg.innerHTML =
       "📚 少しずつ課題を進めましょう！";
+
+    kijipon.innerHTML =
+      "🐤きじぽん：コツコツ進めよう！";
   }
+
 }
 
 function getJapaneseDay(){
