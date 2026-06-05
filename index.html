@@ -82,6 +82,20 @@ button{
 .low{
   border-left:6px solid #7bd389;
 }
+  #kijiponMessage{
+
+  margin-top:15px;
+
+  background:#fff0f6;
+
+  padding:15px;
+
+  border-radius:15px;
+
+  font-weight:bold;
+
+  color:#c76b98;
+}
 .overdue{
   border-left:6px solid #ff0000;
   background:#ffe5e5;
@@ -193,8 +207,21 @@ button{
     </select>
 
     <div id="recommendMessage"></div>
+    <div class="card">
+
+  <h2>🌸 今日の状態</h2>
+
+  <select id="mood">
 
   </div>
+  <div class="card">
+
+  <h2>🎯 今日やるべき課題 TOP3</h2>
+
+  <div id="topTasks"></div>
+
+</div>
+  
 
   <div class="card">
 
@@ -367,11 +394,13 @@ function addTask(){
     return;
   }
 
-  tasks.push(task);
+tasks.push(task);
 
-  saveTasks();
+saveTasks();
 
-  renderTasks();
+renderTasks();
+
+displayTopTasks();
 
   document.getElementById(
     "taskName"
@@ -440,13 +469,14 @@ ${overdue ? 'overdue' : ''}">
         </p>
 
 <p>
-  締切：
-  ${task.deadline}
-  ${
-    overdue
-    ? "⚠ 締切超過"
-    : ""
-  }
+締切：
+${task.deadline}
+
+<br>
+
+⏳あと
+${getRemainingDays(task.deadline)}
+日
 </p>
 
         <p>
@@ -473,7 +503,26 @@ ${overdue ? 'overdue' : ''}">
 
   recommendation();
 }
+function getRemainingDays(deadline){
 
+  if(!deadline){
+    return "-";
+  }
+
+  const today = new Date();
+
+  today.setHours(0,0,0,0);
+
+  const target =
+    new Date(deadline);
+
+  return Math.ceil(
+    (
+      target - today
+    ) /
+    (1000*60*60*24)
+  );
+}
 function completeTask(index){
 
   tasks[index].completed = true;
@@ -499,7 +548,46 @@ function completeTask(index){
   );
 }
 
+function displayTopTasks(){
 
+  const topTasks =
+    [...tasks]
+    .filter(task=>!task.completed)
+    .sort((a,b)=>{
+
+      const score={
+        high:3,
+        medium:2,
+        low:1
+      };
+
+      return (
+        score[b.importance]
+        -
+        score[a.importance]
+      );
+
+    })
+    .slice(0,3);
+
+  const target =
+    document.getElementById(
+      "topTasks"
+    );
+
+  target.innerHTML="";
+
+  topTasks.forEach(task=>{
+
+    target.innerHTML +=
+    `
+    <div class="task">
+      <b>${task.taskName}</b>
+    </div>
+    `;
+  });
+
+}
 function recommendation(){
 
   const mood =
@@ -579,7 +667,38 @@ function recommendation(){
       } が空いています！<br>
       課題を進めるチャンスです！`;
   }
+const kijipon =
+document.getElementById(
+  "kijiponMessage"
+);
 
+if(mood.includes("眠い")){
+
+  kijipon.innerHTML =
+  "🐤きじぽん：無理しすぎないでね！";
+
+}
+
+else if(mood.includes("集中")){
+
+  kijipon.innerHTML =
+  "🐤きじぽん：今がチャンス！";
+
+}
+
+else if(goal.includes("休憩")){
+
+  kijipon.innerHTML =
+  "🐤きじぽん：休憩も大切だよ🌸";
+
+}
+
+else{
+
+  kijipon.innerHTML =
+  "🐤きじぽん：コツコツ進めよう！";
+
+}
   else{
 
     msg.innerHTML =
@@ -736,6 +855,10 @@ function(){
   renderTasks();
 
   displayAvailableRooms();
+
+  recommendation();
+
+  displayTopTasks();
 
 };
 </script>
