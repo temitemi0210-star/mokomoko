@@ -82,6 +82,10 @@ button{
 .low{
   border-left:6px solid #7bd389;
 }
+.overdue{
+  border-left:6px solid #ff0000;
+  background:#ffe5e5;
+}
 
 </style>
 </head>
@@ -301,9 +305,7 @@ function removeExpiredTasks(){
 
   const today = new Date();
 
-  today.setHours(
-    0,0,0,0
-  );
+  today.setHours(0,0,0,0);
 
   tasks = tasks.filter(task => {
 
@@ -311,11 +313,14 @@ function removeExpiredTasks(){
       return true;
     }
 
-    return (
-      new Date(task.deadline)
-      >= today
-    );
+    const deadline =
+      new Date(task.deadline);
 
+    const diffDays =
+      (today - deadline) /
+      (1000 * 60 * 60 * 24);
+
+    return diffDays < 2;
   });
 
   saveTasks();
@@ -405,10 +410,25 @@ function renderTasks(){
 
   tasks.forEach(
     (task,index) => {
+      let overdue = false;
+
+if(task.deadline){
+
+  const today = new Date();
+
+  today.setHours(0,0,0,0);
+
+  const deadline =
+    new Date(task.deadline);
+
+  overdue =
+    deadline < today;
+}
 
       taskList.innerHTML +=
       `
-      <div class="task ${task.importance}">
+<div class="task ${task.importance}
+${overdue ? 'overdue' : ''}">
 
         <h3>
           📝 ${task.taskName}
@@ -419,10 +439,15 @@ function renderTasks(){
           ${task.taskMemo}
         </p>
 
-        <p>
-          締切：
-          ${task.deadline}
-        </p>
+<p>
+  締切：
+  ${task.deadline}
+  ${
+    overdue
+    ? "⚠ 締切超過"
+    : ""
+  }
+</p>
 
         <p>
           ${task.weight}
