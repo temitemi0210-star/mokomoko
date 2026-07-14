@@ -1,64 +1,202 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>らくらくバス時刻</title>
-    <style>
-        body { font-family: sans-serif; line-height: 1.6; padding: 20px; background-color: #f4f7f6; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { border-bottom: 2px solid #2c3e50; padding-bottom: 5px; color: #2c3e50; font-size: 1.2rem; }
-        .time-list { background: #e8f4f8; padding: 10px; border-radius: 5px; word-break: break-all; font-family: monospace; font-size: 0.9rem; margin-bottom: 20px; }
-        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; resize: vertical; }
-        .save-status { font-size: 0.8rem; color: #27ae60; margin-top: 5px; height: 1rem; }
-        .label { font-weight: bold; display: block; margin-top: 10px; }
-    </style>
+<meta charset="UTF-8">
+<title>らくらくバス</title>
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <div class="container">
-    <h1>🚌 111/117番 バス時刻表</h1>
 
-    <h2>那覇IC ⇒ 沖縄南IC（下り）</h2>
-    <div class="time-list">
-        06:26, 06:56, 07:11, 07:58, 08:52, 09:47, 10:11, 10:40, 11:52, 12:27, 12:46, 13:16, 14:05, 15:42, 16:20, 16:44, 17:12, 18:37, 19:02, 19:47, 20:41
-    </div>
+<h1>🚌らくらくバス</h1>
 
-    <h2>沖縄南IC ⇒ 那覇IC（上り）</h2>
-    <div class="time-list">
-        06:43, 07:23, 08:13, 09:27, 09:56, 10:23, 11:00, 11:39, 13:31, 14:26, 14:52, 14:56, 16:01, 16:21, 16:59, 17:16, 17:42, 18:36, 18:49, 19:41, 20:29
-    </div>
+<div id="clock"></div>
 
-    <hr>
+<h2 id="routeName"></h2>
 
-    <label class="label">📝 自分用のメモ・予定（自動保存されます）</label>
-    <textarea id="memoBox" placeholder="例：明日は10:11のバスに乗る！"></textarea>
-    <div id="saveStatus" class="save-status"></div>
+<div class="nextBus">
+<p>次のバス</p>
+
+<div id="nextTime">--:--</div>
+
+<p>あと</p>
+
+<div id="countdown">--分--秒</div>
+
 </div>
 
-<script>
-    const memoBox = document.getElementById('memoBox');
-    const saveStatus = document.getElementById('saveStatus');
+<button onclick="changeRoute()">
+⇄ 停留場を変更
+</button>
 
-    // 1. ページ読み込み時に保存されたデータを表示
-    window.onload = () => {
-        const savedData = localStorage.getItem('busMemo');
-        if (savedData) {
-            memoBox.value = savedData;
-        }
-    };
+<h3>今日の時刻表</h3>
 
-    // 2. 入力するたびにローカルストレージに保存（リアルタイム保存）
-    memoBox.addEventListener('input', () => {
-        localStorage.setItem('busMemo', memoBox.value);
-        saveStatus.innerText = '保存されました ✓';
-        
-        // 2秒後に「保存されました」の文字を消す
-        setTimeout(() => {
-            saveStatus.innerText = '';
-        }, 2000);
-    });
-</script>
+<div id="timeList"></div>
+
+</div>
+
+<script src="script.js"></script>
+body{
+
+font-family:sans-serif;
+background:#eef5ff;
+text-align:center;
+
+}
+
+.container{
+
+max-width:600px;
+margin:auto;
+background:white;
+padding:20px;
+border-radius:15px;
+
+}
+
+#clock{
+
+font-size:40px;
+font-weight:bold;
+
+}
+
+.nextBus{
+
+margin:30px;
+
+}
+
+#nextTime{
+
+font-size:55px;
+color:#ff5722;
+font-weight:bold;
+
+}
+
+#countdown{
+
+font-size:48px;
+color:#2196f3;
+font-weight:bold;
+
+}
+
+button{
+
+font-size:28px;
+padding:20px;
+width:100%;
+border:none;
+background:#4CAF50;
+color:white;
+border-radius:10px;
+
+}
+
+#timeList{
+
+font-size:24px;
+line-height:2;
+
+}
+const down=[
+"06:26","06:56","07:11","07:58","08:52","09:47",
+"10:11","10:40","11:52","12:27","12:46","13:16",
+"14:05","15:42","16:20","16:44","17:12",
+"18:37","19:02","19:47","20:41"
+];
+
+const up=[
+"06:43","07:23","08:13","09:27","09:56","10:23",
+"11:00","11:39","13:31","14:26","14:52","14:56",
+"16:01","16:21","16:59","17:16","17:42",
+"18:36","18:49","19:41","20:29"
+];
+
+let route=0;
+
+function changeRoute(){
+
+route=1-route;
+showRoute();
+
+}
+
+function showRoute(){
+
+const list=route==0?down:up;
+
+document.getElementById("routeName").innerHTML=
+route==0?
+"那覇IC → 沖縄南IC":
+"沖縄南IC → 那覇IC";
+
+document.getElementById("timeList").innerHTML=
+list.join("<br>");
+
+}
+
+function updateClock(){
+
+const now=new Date();
+
+document.getElementById("clock").innerHTML=
+now.toLocaleTimeString("ja-JP");
+
+const list=route==0?down:up;
+
+let next=null;
+
+for(let t of list){
+
+const [h,m]=t.split(":");
+
+let bus=new Date();
+
+bus.setHours(h);
+bus.setMinutes(m);
+bus.setSeconds(0);
+
+if(bus>now){
+
+next=bus;
+break;
+
+}
+
+}
+
+if(next==null){
+
+document.getElementById("nextTime").innerHTML="本日終了";
+document.getElementById("countdown").innerHTML="";
+
+return;
+
+}
+
+document.getElementById("nextTime").innerHTML=
+String(next.getHours()).padStart(2,"0")+":"+
+String(next.getMinutes()).padStart(2,"0");
+
+let diff=Math.floor((next-now)/1000);
+
+let min=Math.floor(diff/60);
+
+let sec=diff%60;
+
+document.getElementById("countdown").innerHTML=
+min+"分"+sec+"秒";
+
+}
+
+showRoute();
+
+setInterval(updateClock,1000);
 
 </body>
 </html>
